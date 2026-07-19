@@ -30,7 +30,7 @@ jobs:
       - name: Tauri Rust validation
         working-directory: src-tauri
         run: cargo check
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: domus-test-artifacts-${{ matrix.os }}
