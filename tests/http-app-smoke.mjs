@@ -45,15 +45,26 @@ if (/ERR_BLOCKED_BY_ADMINISTRATOR/.test(navigation.errorText || '')) {
   await fetch(`http://127.0.0.1:${cdpPort}/json/close/${target.id}`, { method: 'PUT' }).catch(() => {});
   process.exit(0);
 }
-for (let attempt = 0; attempt < 40; attempt += 1) {
-  const ready = await evaluate(`document.readyState === 'complete' && /DOMUS Studio/.test(document.title) && !!window.DomusDiagnostics`);
-  if (ready) break;
+let loaded = null;
+for (let attempt = 0; attempt < 120; attempt += 1) {
+  loaded = await evaluate(`({
+    ready: document.readyState === 'complete',
+    title: document.title,
+    projects: document.querySelectorAll('[data-action="open-project"]').length,
+    testLab: !!window.DomusDiagnostics,
+    badge: document.getElementById('diagnosticsBadge')?.textContent || '',
+    storageError: /Nepodařilo se otevřít lokální úložiště/i.test(document.body.innerText),
+    body: document.body.innerText.slice(0, 1200)
+  })`);
+  if (loaded.ready && /DOMUS Studio/.test(loaded.title) && loaded.testLab && (loaded.projects >= 1 || loaded.storageError)) break;
   await sleep(150);
 }
-const loaded = await evaluate(`({title:document.title,projects:document.querySelectorAll('[data-action="open-project"]').length,testLab:!!window.DomusDiagnostics,badge:document.getElementById('diagnosticsBadge')?.textContent||''})`);
-assert.match(loaded.title, /7\.0/);
-assert.ok(loaded.projects >= 1, 'Reálné HTTP spuštění musí zobrazit projekt.');
-assert.equal(loaded.testLab, true, 'Test Lab musí být dostupný jako runtime modul.');
+assert.match(loaded?.title || '', /7\.0/);
+assert.equal(loaded?.testLab, true, 'Test Lab musí být dostupný jako runtime modul.');
+if (!loaded || loaded.projects < 1) {
+  const runtime = errors.length ? `\nRuntime chyby:\n${errors.join('\n')}` : '';
+  throw new Error(`Reálné HTTP spuštění po čekání nezobrazilo projekt. Stav: ${JSON.stringify(loaded)}${runtime}`);
+}
 const dashboardReport = await evaluate(`DomusDiagnostics.runAll({includeServices:false})`);
 assert.equal(dashboardReport.counts.fail, 0, `Test Lab na dashboardu hlásí FAIL: ${JSON.stringify(dashboardReport.results.filter(r=>r.status==='fail'))}`);
 assert.ok(dashboardReport.counts.pass >= 16, `Na HTTP se očekává nejméně 16 PASS, výsledek: ${JSON.stringify(dashboardReport.counts)}`);
