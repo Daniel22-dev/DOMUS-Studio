@@ -32,10 +32,19 @@ function send(method, params = {}) {
   socket.send(JSON.stringify({ id: requestId, method, params }));
   return new Promise((resolve, reject) => waiting.set(requestId, { resolve, reject }));
 }
-async function evaluate(expression) {
-  const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
-  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
-  return result.result.value;
+async function evaluate(expression, retries = 4) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+      if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
+      return result.result.value;
+    } catch (error) {
+      const transientNavigation = /Inspected target navigated|Execution context was destroyed|Cannot find context/i.test(String(error?.message || error));
+      if (!transientNavigation || attempt === retries) throw error;
+      await sleep(200);
+    }
+  }
+  throw new Error('Vyhodnocení v prohlížeči se nepodařilo dokončit.');
 }
 await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
 const navigation = await send('Page.navigate', { url: `http://127.0.0.1:${httpPort}/index.html` });

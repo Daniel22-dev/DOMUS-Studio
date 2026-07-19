@@ -126,9 +126,26 @@
       });
     }).catch((error) => console.warn('Service worker:', error));
     navigator.serviceWorker.addEventListener('message', (event) => { if (event.data?.type === 'DOMUS_UPDATE_READY' && navigator.serviceWorker.controller) updateBtn.hidden = false; });
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { refreshing = true; location.reload(); } });
-    updateBtn?.addEventListener('click', async () => { const registration = await navigator.serviceWorker.getRegistration(); registration?.waiting?.postMessage({ type: 'SKIP_WAITING' }); if (!registration?.waiting) location.reload(); });
+    let serviceWorkerHasController = Boolean(navigator.serviceWorker.controller);
+    let serviceWorkerReloading = false;
+    let serviceWorkerUpdateRequested = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      const shouldReload = serviceWorkerHasController || serviceWorkerUpdateRequested;
+      serviceWorkerHasController = true;
+      if (shouldReload && !serviceWorkerReloading) {
+        serviceWorkerReloading = true;
+        location.reload();
+      }
+    });
+    updateBtn?.addEventListener('click', async () => {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration?.waiting) {
+        serviceWorkerUpdateRequested = true;
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        location.reload();
+      }
+    });
   }
 
   const safeStorageGet = (key) => { try { return localStorage.getItem(key) || ''; } catch { return ''; } };
