@@ -1,0 +1,13 @@
+name: Hlášení chyby
+description: Chyba DOMUS Studio s diagnostickým protokolem
+title: "[Chyba] "
+labels: [bug]
+body:
+  - type: textarea
+    attributes: { label: Co se stalo, description: Popište kroky, očekávaný a skutečný výsledek. }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Verze, placeholder: 7.0.0 }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Test Lab, description: Vložte anonymizovaný TXT protokol. }

@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+node_modules/
+coverage/
+test-results/
+playwright-report/
+*.log
+.domus-sync.json
+sync-store/
+config/
+ai-key.dat
+ai-settings.json

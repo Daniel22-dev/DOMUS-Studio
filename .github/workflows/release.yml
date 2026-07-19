@@ -1,0 +1,90 @@
+name: Premium desktop release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, ubuntu-22.04, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Install Tauri Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Validate updater signing secrets
+        shell: node {0}
+        env:
+          UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
+          UPDATER_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if (!process.env.UPDATER_PUBLIC_KEY) throw new Error('Missing TAURI_UPDATER_PUBLIC_KEY');
+          if (!process.env.UPDATER_PRIVATE_KEY) throw new Error('Missing TAURI_SIGNING_PRIVATE_KEY');
+      - name: Configure updater for this repository
+        shell: node {0}
+        env:
+          UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          const fs = require('fs');
+          const path = 'src-tauri/tauri.conf.json';
+          const cfg = JSON.parse(fs.readFileSync(path, 'utf8'));
+          cfg.plugins = cfg.plugins || {};
+          cfg.plugins.updater = {
+            pubkey: process.env.UPDATER_PUBLIC_KEY,
+            endpoints: [`https://github.com/${process.env.REPOSITORY}/releases/latest/download/latest.json`]
+          };
+          fs.writeFileSync(path, JSON.stringify(cfg, null, 2) + '\n');
+      - name: Import optional Windows code-signing certificate
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE)) {
+            Write-Host 'WINDOWS_CERTIFICATE není nastaven; Windows balíček bude bez Authenticode podpisu.'
+            exit 0
+          }
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_PASSWORD)) { throw 'Chybí WINDOWS_CERTIFICATE_PASSWORD.' }
+          $bytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+          $path = Join-Path $env:RUNNER_TEMP 'domus-certificate.pfx'
+          [IO.File]::WriteAllBytes($path, $bytes)
+          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $path -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          $configPath = 'src-tauri/tauri.conf.json'
+          $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
+          $cfg.bundle.windows | Add-Member -NotePropertyName certificateThumbprint -NotePropertyValue $cert.Thumbprint -Force
+          $cfg.bundle.windows | Add-Member -NotePropertyName digestAlgorithm -NotePropertyValue 'sha256' -Force
+          $cfg.bundle.windows | Add-Member -NotePropertyName timestampUrl -NotePropertyValue 'http://timestamp.digicert.com' -Force
+          $cfg | ConvertTo-Json -Depth 20 | Set-Content $configPath -Encoding UTF8
+      - name: Configure macOS ad-hoc signing
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        run: echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: v__VERSION__
+          releaseName: DOMUS Studio v__VERSION__ Premium
+          releaseBody: "Automaticky sestavená prémiová desktopová verze. Před instalací doporučujeme vytvořit DOMUS ZIP zálohu."
+          releaseDraft: true
+          prerelease: false

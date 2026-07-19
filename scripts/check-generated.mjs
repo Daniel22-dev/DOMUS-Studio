@@ -1,0 +1,5 @@
+import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';import {fileURLToPath} from 'node:url';import {spawnSync} from 'node:child_process';
+const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const tracked=['app.js','domus-core.js','db.js','domus-audit.js','domus-backup.js','domus-premium.js','domus-performance.js','domus-diagnostics.js'];
+const digest=(name)=>fs.existsSync(path.join(ROOT,name))?crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT,name))).digest('hex'):'missing';
+const before=new Map(tracked.map(name=>[name,digest(name)]));const result=spawnSync(process.execPath,[path.join(ROOT,'scripts','build.mjs')],{cwd:ROOT,encoding:'utf8'});if(result.status!==0){process.stderr.write(result.stderr||result.stdout);process.exit(result.status||1);}const changed=tracked.filter(name=>before.get(name)!==digest(name));if(changed.length){console.error(`Generated files were stale: ${changed.join(', ')}. Run npm run build and commit the result.`);process.exit(1);}console.log('generated-check: OK');

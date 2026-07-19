@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const APP_DIR = path.join(ROOT, 'src', 'app');
+const CORE_DIR = path.join(ROOT, 'src', 'core');
+const DIST = path.join(ROOT, 'dist');
+const fragments = fs.readdirSync(APP_DIR).filter((name) => /^\d+.*\.js$/.test(name)).sort((a,b)=>Number.parseInt(a,10)-Number.parseInt(b,10));
+if(!fragments.length) throw new Error('Nenalezeny aplikační fragmenty.');
+const coreModules=fs.readdirSync(CORE_DIR).filter(file=>file.endsWith('.js')).sort();
+const banner='/* GENERATED FILE – edit src/app/*.js and run npm run build. DOMUS Studio v7.0.0 Premium */\n';
+fs.writeFileSync(path.join(ROOT,'app.js'),banner+fragments.map(name=>fs.readFileSync(path.join(APP_DIR,name),'utf8').trimEnd()).join('\n\n')+'\n');
+for(const name of coreModules) fs.copyFileSync(path.join(CORE_DIR,name),path.join(ROOT,name));
+const generated={version:'7.0.0',schemaVersion:7,generatedAt:new Date().toISOString(),appFragments:fragments,coreModules};
+fs.writeFileSync(path.join(ROOT,'build-manifest.json'),`${JSON.stringify(generated,null,2)}\n`);
+fs.rmSync(DIST,{recursive:true,force:true});fs.mkdirSync(DIST,{recursive:true});
+const runtime=['index.html','styles.css','app.js','domus-core.js','db.js','domus-audit.js','domus-backup.js','domus-premium.js','domus-performance.js','domus-diagnostics.js','manifest.webmanifest','service-worker.js','icon.svg','icon-192.png','icon-512.png','icon-maskable-512.png','build-manifest.json'];
+for(const file of runtime)fs.copyFileSync(path.join(ROOT,file),path.join(DIST,file));
+for(const dir of ['vendor','workers'])fs.cpSync(path.join(ROOT,dir),path.join(DIST,dir),{recursive:true});
+console.log(`build: OK (${fragments.length} app fragments, ${coreModules.length} core modules, dist ready)`);

@@ -1,0 +1,4 @@
+DOMUS Studio Premium
+Version: 7.0.0
+Datové schéma: 7
+Architektura: 21 aplikačních modulů + 7 základních jader

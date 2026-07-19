@@ -1,0 +1,31 @@
+{
+  "name": "domus-studio",
+  "version": "7.0.0",
+  "private": true,
+  "description": "DOMUS Studio Premium: local-first projektové centrum s Precision 2D, RealSpace 3D, Report Studiem, Test Labem a desktopovou distribucí.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:generated": "node scripts/check-generated.mjs",
+    "test:unit": "node tests/core-tests.mjs && node tests/premium-tests.mjs",
+    "test:static": "python tests/static-checks.py",
+    "test:powershell": "python tests/powershell-static.py",
+    "test:browser": "node scripts/run-browser-tests.mjs",
+    "test": "npm run build && npm run test:unit && npm run test:static && npm run test:powershell",
+    "test:all": "npm test && npm run test:browser",
+    "check": "npm run check:generated && npm run test:unit && npm run test:static && npm run test:powershell",
+    "tauri": "tauri",
+    "desktop:dev": "npm run build && tauri dev",
+    "desktop:build": "npm run build && tauri build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-process": "^2.3.0",
+    "@tauri-apps/plugin-updater": "^2.9.0",
+    "three": "^0.185.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.0"
+  },
+  "engines": { "node": ">=20" }
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DOMUS Studio v6.1 – Test Lab a modularizace</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:980px;margin:40px auto;padding:0 24px;line-height:1.6;color:#202124}
+    h1,h2{line-height:1.2}.tag{display:inline-block;padding:4px 10px;border-radius:999px;background:#efe7d4}
+    code{background:#f3f4f6;padding:2px 5px;border-radius:4px}li{margin:.35rem 0}
+  </style>
+</head>
+<body>
+  <p class="tag">DOMUS Studio v6.1.0</p>
+  <h1>Vestavěný Test Lab a GitHub modularizace</h1>
+  <p>Verze 6.1 nemění datové schéma projektů. Zaměřuje se na diagnostiku, udržovatelnost zdrojového kódu a automatické testování každé změny na GitHubu.</p>
+  <h2>Test Lab přímo v aplikaci</h2>
+  <ul>
+    <li>tichý self-test po startu,</li>
+    <li>výsledky PASS, WARN a FAIL,</li>
+    <li>kontrola runtime, UI, bezpečnosti, dat, DOMUS Verify, záloh, IndexedDB a PWA,</li>
+    <li>bezpečný dočasný databázový round-trip,</li>
+    <li>stažitelný diagnostický protokol.</li>
+  </ul>
+  <h2>Modularizace</h2>
+  <ul>
+    <li>13 doménových částí hlavní aplikace ve <code>src/app</code>,</li>
+    <li>5 samostatných modulů ve <code>src/core</code>,</li>
+    <li>reprodukovatelný build a kontrola zastaralých generovaných souborů,</li>
+    <li>dokumentovaná architektura a pravidla pro pull requesty.</li>
+  </ul>
+  <h2>GitHub Actions</h2>
+  <p>Při pushi a pull requestu proběhne sestavení, jednotkové, bezpečnostní, statické, PowerShell, prohlížečové, HTTP a IndexedDB testy.</p>
+  <h2>Kompatibilita</h2>
+  <p>Datové schéma zůstává ve verzi 6. Starší projekty a zálohy zůstávají kompatibilní. Koncový uživatel nepotřebuje Node.js.</p>
+</body>
+</html>

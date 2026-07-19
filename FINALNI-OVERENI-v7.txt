@@ -1,0 +1,53 @@
+DOMUS Studio Premium v7.0.0 – finální ověření etap A–C
+=======================================================
+Datum kontroly: 19. 7. 2026
+Datové schéma: 7
+Architektura: 21 aplikačních modulů + 7 základních jader + Tauri desktop
+
+ETAPA A – PRÉMIOVÝ ZÁKLAD
+- onboarding a projektové šablony: HOTOVO
+- značka, logo a designové režimy: HOTOVO
+- DOMUS Report Studio a revize: HOTOVO
+- rozšířený Test Lab: HOTOVO
+- Windows/Linux CI, CodeQL a Dependabot: HOTOVO
+- Tauri desktop a release workflow: HOTOVO VE ZDROJI
+- fyzicky podepsaný instalátor: VYŽADUJE GITHUB SECRETS A CERTIFIKÁT
+
+ETAPA B – PRECISION 2D
+- magnetická mřížka, konce a pravé úhly: HOTOVO
+- vrstvy, viditelnost a uzamykání: HOTOVO
+- vícenásobný výběr a transformace: HOTOVO
+- Undo/Redo: HOTOVO
+- parametrická a vlastní knihovna: HOTOVO
+- automatické kóty: HOTOVO
+- DXF export: HOTOVO
+
+ETAPA C – PREMIUM PRODUKT
+- skutečná Three.js WebGL scéna: HOTOVO
+- perspektivní/ortografická kamera, stíny, řez a popisky: HOTOVO
+- PBR vlastnosti materiálů a fullscreen: HOTOVO
+- PNG a GLB export: HOTOVO
+- položkové slučování synchronizace: HOTOVO
+- výkonnostní profil a Web Worker: HOTOVO
+- Tauri updater bridge: HOTOVO
+- multiplatformní release workflow: HOTOVO VE ZDROJI
+
+VÝSLEDKY
+- npm run test:all: OK
+- build: OK (21 + 7 modulů)
+- core-tests: OK
+- premium-tests: OK
+- static-checks: OK (105 akcí, 73 HTML ID)
+- powershell-static: OK
+- browser smoke: OK (16 pracovních částí)
+- mobilní viewport 390 px: OK
+- npm audit: 0 známých zranitelností
+- generated-check: OK
+
+OMEZENÍ OVĚŘENÍ
+- HTTP a IndexedDB testy byly místním spravovaným Chromiem přeskočeny; zůstávají v GitHub CI.
+- Rust/Tauri build nebylo možné fyzicky spustit, protože pracovní prostředí neobsahuje Rust/Cargo a platformní SDK.
+- Windows a updater podpis vyžadují soukromé klíče, které se správně nevkládají do distribučního ZIPu.
+
+VERDIKT
+Zdrojová, runtime, testovací a release vrstva etap A–C je dokončena. Balíček je připraven k nahrání na GitHub. První GitHub Actions běh musí potvrdit Rust/Tauri sestavení na nativních runnerech; následné podepsané vydání vyžaduje nastavení Secrets dle docs/DESKTOP-RELEASE.md.

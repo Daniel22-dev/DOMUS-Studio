@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d151b" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <title>DOMUS Studio v7.0 Premium</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <header class="topbar">
+    <button class="brand" id="homeBtn" aria-label="Přejít na přehled projektů">
+      <span class="brand-mark">D</span>
+      <span>
+        <strong>DOMUS Studio</strong>
+        <small>v7 Premium · Precision 2D, RealSpace 3D a Report Studio</small>
+      </span>
+    </button>
+    <div class="topbar-center" id="projectCrumb"></div>
+    <div class="topbar-actions">
+      <span id="saveStatus" class="save-status" aria-live="polite">Připraveno</span>
+      <button class="btn btn-ghost" id="undoBtn" hidden>Vrátit poslední změnu</button>
+      <button class="btn btn-ghost" id="installBtn" hidden>Nainstalovat aplikaci</button><button class="btn btn-secondary" id="updateBtn" hidden>Načíst novou verzi</button>
+      <button class="btn btn-ghost desktop-action" id="settingsBtn">Nastavení</button>
+      <button class="btn btn-ghost diagnostics-button desktop-action" id="diagnosticsBtn">Test Lab <span id="diagnosticsBadge" class="diagnostics-badge">—</span></button>
+      <button class="btn btn-ghost desktop-action" id="importBtn">Import zálohy</button>
+      <button class="btn btn-ghost desktop-action" id="exportBtn">Export zálohy</button>
+      <button class="btn btn-ghost mobile-menu-btn" id="mobileMenuBtn" aria-expanded="false" aria-controls="mobileActions">⋮</button>
+      <button class="btn btn-primary" id="newProjectBtn">Nový projekt</button>
+      <div id="mobileActions" class="mobile-actions" hidden>
+        <button class="btn btn-ghost" id="mobileImportBtn">Import zálohy</button>
+        <button class="btn btn-ghost" id="mobileExportBtn">Export zálohy</button>
+        <button class="btn btn-ghost" id="storageInfoBtn">Úložiště a zálohy</button>
+        <button class="btn btn-ghost" id="mobileSettingsBtn">Nastavení aplikace</button>
+        <button class="btn btn-ghost" id="mobileDiagnosticsBtn">Test Lab a diagnostika</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <input id="backupInput" type="file" accept="application/json,application/zip,.json,.zip,.domus.zip" hidden />
+  <input id="photoInput" type="file" accept="image/*" hidden />
+  <input id="compareBeforeInput" type="file" accept="image/*" hidden />
+  <input id="compareAfterInput" type="file" accept="image/*" hidden />
+  <input id="roomPhotosInput" type="file" accept="image/*" multiple hidden />
+  <input id="fieldPhotoInput" type="file" accept="image/*" capture="environment" multiple hidden />
+  <input id="scanInput" type="file" accept=".json,.usdz,.obj,.glb,.gltf,.ply,model/*,application/json" hidden />
+  <input id="diaryPhotoInput" type="file" accept="image/*" capture="environment" multiple hidden />
+  <input id="warrantyDocumentInput" type="file" accept="image/*,application/pdf,.pdf,.doc,.docx,.txt" hidden />
+
+  <dialog id="projectDialog" class="modal">
+    <form method="dialog" id="projectForm" class="modal-card">
+      <div class="modal-head">
+        <div><p class="eyebrow">Projekt</p><h2>Založit nebo upravit projekt</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Zavřít">×</button>
+      </div>
+      <label>Název projektu
+        <input name="name" required placeholder="Např. Sprchový kout v přízemí" maxlength="80" />
+      </label>
+      <div class="form-grid">
+        <label>Kategorie
+          <select name="category">
+            <option>Koupelna</option><option>Zahrada</option><option>Technologie domu</option>
+            <option>Zateplení</option><option>Přístřešek a konstrukce</option><option>Interiér</option><option>Ostatní</option>
+          </select>
+        </label>
+        <label>Stav
+          <select name="status">
+            <option>Nápad</option><option>Rozpracováno</option><option>Připraveno pro dodavatele</option>
+            <option>Realizace</option><option>Dokončeno</option>
+          </select>
+        </label>
+      </div>
+      <label>Umístění<input name="location" placeholder="Např. Bravantice · přízemí" maxlength="80" /></label>
+      <label>Šablona projektu<select name="template"><option value="blank">Prázdný projekt</option><option value="bathroom">Rekonstrukce koupelny</option><option value="room">Rekonstrukce místnosti</option><option value="flooring">Pokládka podlahy</option><option value="terrace">Terasa</option><option value="garden">Zahrada a závlaha</option><option value="pool">Bazén</option></select></label>
+      <label>Stručný záměr<textarea name="summary" rows="4" placeholder="Co má být výsledkem projektu a jaká omezení je potřeba respektovat?"></textarea></label>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit projekt</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="materialDialog" class="modal wide">
+    <form method="dialog" id="materialForm" class="modal-card wide">
+      <div class="modal-head">
+        <div><p class="eyebrow">Knihovna projektu</p><h2>Výrobek nebo materiál</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Zavřít">×</button>
+      </div>
+      <label>Odkaz na výrobek
+        <div class="input-action"><input name="url" type="url" placeholder="https://..." /><button type="button" class="btn btn-secondary" id="parseUrlBtn">Načíst parametry z odkazu</button></div>
+      </label>
+      <div class="form-grid">
+        <label>Název<input name="name" required placeholder="Sprchová vanička 120 × 90 cm" /></label>
+        <label>Kategorie
+          <select name="category"><option>Výrobek</option><option>Materiál</option><option>Zařízení</option><option>Stavební prvek</option><option>Technologie</option><option>Práce</option></select>
+        </label>
+      </div>
+      <div class="form-grid">
+        <label>Výrobce<input name="manufacturer" placeholder="Např. RAKO" /></label>
+        <label>Kód / označení<input name="sku" placeholder="Např. DAR66780" /></label>
+      </div>
+      <div class="form-grid three">
+        <label>Šířka (mm)<input name="width" inputmode="decimal" placeholder="1200" /></label>
+        <label>Hloubka (mm)<input name="depth" inputmode="decimal" placeholder="900" /></label>
+        <label>Výška / tloušťka (mm)<input name="height" inputmode="decimal" placeholder="40" /></label>
+      </div>
+      <div class="form-grid three">
+        <label>Způsob výpočtu
+          <select name="calculation">
+            <option value="manual">Ručně zadané množství</option>
+            <option value="floor">Podle plochy podlahy</option>
+            <option value="walls">Podle čisté plochy stěn</option>
+            <option value="ceiling">Podle plochy stropu</option>
+            <option value="perimeter">Podle obvodu</option>
+          </select>
+        </label>
+        <label>Jednotka
+          <select name="unit"><option>ks</option><option>balení</option><option>m²</option><option>bm</option><option>l</option><option>kg</option><option>hod</option></select>
+        </label>
+        <label>Ruční množství<input name="quantity" inputmode="decimal" value="1" /></label>
+      </div>
+      <div class="form-grid three">
+        <label>Vydatnost jednotky<input name="coverage" inputmode="decimal" value="1" placeholder="např. 1,44 m² / bal." /></label>
+        <label>Rezerva / prořez (%)<input name="wastePercent" inputmode="decimal" value="10" /></label>
+        <label>Cena za jednotku (Kč)<input name="unitPrice" inputmode="decimal" placeholder="8500" /></label>
+      </div>
+      <div class="form-grid">
+        <label>Barva / povrch<input name="color" placeholder="Bílá, matná" /></label>
+        <label>Barva v modelu<input name="swatch" type="color" value="#d6d6d0" /></label>
+      </div>
+      <label>Poznámka<textarea name="note" rows="3" placeholder="Technické požadavky, montáž, dodavatel..."></textarea></label>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit položku</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="costDialog" class="modal">
+    <form method="dialog" id="costForm" class="modal-card">
+      <div class="modal-head">
+        <div><p class="eyebrow">Rozpočet</p><h2>Práce nebo vedlejší náklad</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Zavřít">×</button>
+      </div>
+      <div class="form-grid">
+        <label>Název<input name="name" required placeholder="Montáž sprchového koutu" /></label>
+        <label>Kategorie<select name="category"><option>Práce</option><option>Doprava</option><option>Pronájem techniky</option><option>Projekt a revize</option><option>Likvidace odpadu</option><option>Ostatní</option></select></label>
+      </div>
+      <div class="form-grid three">
+        <label>Množství<input name="quantity" inputmode="decimal" value="1" /></label>
+        <label>Jednotka<select name="unit"><option>ks</option><option>hod</option><option>den</option><option>m²</option><option>bm</option><option>km</option><option>paušál</option></select></label>
+        <label>Cena za jednotku (Kč)<input name="unitPrice" inputmode="decimal" required /></label>
+      </div>
+      <label>Poznámka<textarea name="note" rows="3" placeholder="Rozsah práce, dodavatel nebo podmínky nabídky..."></textarea></label>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit náklad</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="assemblyDialog" class="modal">
+    <form method="dialog" id="assemblyForm" class="modal-card">
+      <div class="modal-head">
+        <div><p class="eyebrow">Konstrukční skladba</p><h2>Přidat vrstvu</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Zavřít">×</button>
+      </div>
+      <label>Název vrstvy<input name="name" required placeholder="Např. keramická dlažba" /></label>
+      <div class="form-grid three">
+        <label>Tloušťka (mm)<input name="thicknessMm" inputmode="decimal" required placeholder="10" /></label>
+        <label>Materiál<input name="material" placeholder="Keramika" /></label>
+        <label>Barva ve výkresu<input name="color" type="color" value="#c8b08a" /></label>
+      </div>
+      <label>Poznámka<textarea name="note" rows="2" placeholder="Výrobek, technologický postup nebo důležitá vazba..."></textarea></label>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Přidat vrstvu</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="objectDialog" class="modal">
+    <form method="dialog" id="objectForm" class="modal-card">
+      <div class="modal-head">
+        <div><p class="eyebrow">Prvek výkresu</p><h2>Upravit objekt</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Zavřít">×</button>
+      </div>
+      <label>Název prvku<input name="type" required /></label>
+      <div class="form-grid three">
+        <label>Šířka (mm)<input name="widthMm" inputmode="decimal" required /></label>
+        <label>Hloubka (mm)<input name="depthMm" inputmode="decimal" required /></label>
+        <label>Výška (cm)<input name="heightCm" inputmode="decimal" required /></label>
+        <label>Otočení (°)<input name="rotation" type="number" min="-360" max="360" step="1" value="0" /></label>
+      </div>
+      <div class="form-grid">
+        <label>Vrstva<select name="layer"></select></label>
+        <label>Materiál projektu<select name="materialId"><option value="">Bez vazby na materiál</option></select></label>
+      </div>
+      <div class="form-grid door-options">
+        <label>Strana pantů<select name="hingeSide"><option value="">Neurčeno</option><option value="left">Vlevo</option><option value="right">Vpravo</option></select></label>
+        <label>Směr otevírání<select name="opensTo"><option value="">Neurčeno</option><option value="inside">Dovnitř místnosti</option><option value="outside">Ven z místnosti</option><option value="sliding">Posuvné</option></select></label>
+      </div>
+      <label>Poznámka<textarea name="note" rows="3"></textarea></label>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit objekt</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="variantDialog" class="modal">
+    <form method="dialog" id="variantForm" class="modal-card">
+      <div class="modal-head"><div><p class="eyebrow">Varianty řešení</p><h2>Nová varianta</h2></div><button class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <label>Název varianty<input name="name" required placeholder="Např. Varianta B · černé profily" /></label>
+      <label class="check-row"><input name="duplicate" type="checkbox" checked /> Zkopírovat aktuální variantu</label>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Vytvořit variantu</button></div>
+    </form>
+  </dialog>
+
+
+  <dialog id="diaryDialog" class="modal wide">
+    <form method="dialog" id="diaryForm" class="modal-card wide">
+      <div class="modal-head"><div><p class="eyebrow">Stavební deník</p><h2>Záznam realizace</h2></div><button class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <div class="form-grid three"><label>Datum<input name="date" type="date" required /></label><label>Typ záznamu<select name="type"><option>Příprava</option><option>Práce</option><option>Kontrola</option><option>Dodávka</option><option>Změna projektu</option><option>Problém / reklamace</option><option>Předání</option></select></label><label>Stav<select name="status"><option>Rozpracováno</option><option>Dokončeno</option><option>Čeká na kontrolu</option><option>Přerušeno</option></select></label></div>
+      <div class="form-grid"><label>Název záznamu<input name="title" required placeholder="Např. rozvody vody před zakrytím" /></label><label>Dodavatel / firma<input name="contractor" /></label></div><div class="form-grid three"><label>Odpovědná osoba<input name="responsible" /></label><label>Počet pracovníků<input name="workers" inputmode="numeric" /></label><label>Počasí / podmínky<input name="weather" placeholder="Např. 18 °C, sucho" /></label></div>
+      <div class="form-grid"><label>Plánovaný náklad (Kč)<input name="plannedCost" inputmode="decimal" /></label><label>Skutečný náklad (Kč)<input name="actualCost" inputmode="decimal" /></label></div>
+      <label>Popis, změny a závěry<textarea name="note" rows="5" placeholder="Co bylo provedeno, co se změnilo proti plánu, co je potřeba zkontrolovat..."></textarea></label>
+      <fieldset class="passport-fieldset"><legend>Volitelně: zapsat skrytý prvek do technického pasu</legend><div class="form-grid"><label>Název<input name="hiddenName" placeholder="Např. kabel CYKY 3×2,5" /></label><label>Kategorie<select name="hiddenCategory"><option>Elektro</option><option>Voda</option><option>Odpad</option><option>Vytápění</option><option>Vzduchotechnika</option><option>Konstrukce</option><option>Jiné</option></select></label></div><div class="form-grid"><label>Poloha<input name="hiddenLocation" placeholder="Např. 420 mm od levého rohu" /></label><label>Hloubka / výška<input name="hiddenDepth" placeholder="Např. 35 mm pod omítkou" /></label></div><label>Popis<textarea name="hiddenDescription" rows="2"></textarea></label></fieldset>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit záznam</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="warrantyDialog" class="modal">
+    <form method="dialog" id="warrantyForm" class="modal-card">
+      <div class="modal-head"><div><p class="eyebrow">Technický pas</p><h2>Záruka, návod nebo doklad</h2></div><button class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <label>Výrobek / práce<input name="item" required /></label><div class="form-grid"><label>Dodavatel<input name="supplier" /></label><label>Sériové číslo<input name="serial" /></label></div><div class="form-grid"><label>Datum nákupu / předání<input name="purchaseDate" type="date" /></label><label>Délka záruky (měsíce)<input name="warrantyMonths" inputmode="numeric" value="24" /></label></div><label>Poznámka<textarea name="note" rows="3"></textarea></label><div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="onboardingDialog" class="modal wide premium-onboarding">
+    <form method="dialog" class="modal-card wide">
+      <div class="modal-head"><div><p class="eyebrow">Vítejte v DOMUS Studio Premium</p><h2>Od skutečného stavu k profesionálnímu projektu</h2><p>Zvolte typ projektu. DOMUS připraví základní půdorys, vrstvy, materiály a doporučený pracovní postup.</p></div><button id="onboardingCloseBtn" class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <input id="onboardingTemplateSelect" type="hidden" value="blank">
+      <div id="onboardingTemplateCards" class="onboarding-template-grid"></div>
+      <div class="premium-feature-strip"><span><strong>Precision 2D</strong> přesné kreslení</span><span><strong>RealSpace 3D</strong> WebGL model</span><span><strong>Report Studio</strong> profesionální výstupy</span><span><strong>Local-first</strong> data pod kontrolou</span></div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="onboardingCloseBtnSecondary" value="cancel">Prohlédnout ukázku</button><button class="btn btn-primary" id="onboardingStartBtn" type="button">Založit vlastní projekt</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog" class="modal wide">
+    <form method="dialog" id="settingsForm" class="modal-card wide">
+      <div class="modal-head"><div><p class="eyebrow">DOMUS Studio Premium</p><h2>Nastavení vzhledu, značky a aktualizací</h2></div><button class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <div class="settings-grid"><section><h3>Rozhraní</h3><label>Vzhled<select name="theme"><option value="dark">Tmavý</option><option value="light">Světlý</option><option value="system">Podle systému</option></select></label><label>Hustota<select name="density"><option value="comfortable">Pohodlná</option><option value="compact">Kompaktní</option></select></label><label class="check-row"><input name="reduceMotion" type="checkbox"> omezit animace</label></section><section><h3>Značka dokumentace</h3><div id="brandingLogoPreview" class="branding-logo-preview"></div><label>Logo<input id="brandingLogoInput" type="file" accept="image/png,image/jpeg,image/webp"></label><label>Firma / značka<input name="company"></label><label>Autor<input name="author"></label><div class="form-grid"><label>E-mail<input name="email" type="email"></label><label>Telefon<input name="phone"></label></div><label>Text zápatí<textarea name="footer" rows="2"></textarea></label></section></div>
+      <div class="desktop-update-card"><div><strong>Desktopová verze</strong><span id="desktopUpdateStatus">Aktualizace se kontrolují bezpečně přes podepsaný kanál.</span></div><button id="checkDesktopUpdateBtn" class="btn btn-secondary" type="button">Zkontrolovat aktualizace</button></div>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Uložit nastavení</button></div>
+    </form>
+  </dialog>
+
+  <section id="printArea" class="print-area" aria-hidden="true"></section>
+
+  <dialog id="inputDialog" class="modal">
+    <form method="dialog" id="inputForm" class="modal-card">
+      <div class="modal-head"><div><p class="eyebrow">DOMUS Studio</p><h2 id="inputDialogTitle">Zadat hodnotu</h2></div><button class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <label id="inputDialogLabel">Hodnota<input id="inputDialogValue" name="value" /></label>
+      <p id="inputDialogHelp" class="muted"></p>
+      <div class="modal-actions"><button class="btn btn-ghost" value="cancel">Zrušit</button><button class="btn btn-primary" value="default">Potvrdit</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="storageDialog" class="modal wide">
+    <form method="dialog" class="modal-card wide">
+      <div class="modal-head"><div><p class="eyebrow">Bezpečnost dat</p><h2>Úložiště, zálohy a obnova</h2></div><button class="icon-btn" value="cancel" aria-label="Zavřít">×</button></div>
+      <div id="storageDialogContent"></div>
+      <div class="modal-actions"><button class="btn btn-secondary" type="button" id="createSnapshotBtn">Vytvořit bod obnovy</button><button class="btn btn-primary" value="default">Zavřít</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="diagnosticsDialog" class="modal wide diagnostics-dialog">
+    <form method="dialog" class="modal-card wide">
+      <div class="modal-head">
+        <div><p class="eyebrow">Admin diagnostika</p><h2>DOMUS Test Lab</h2><p>Vestavěné bezpečné testy runtime, dat, exportů, PWA a lokálních služeb.</p></div>
+        <button class="icon-btn" value="cancel" aria-label="Zavřít">×</button>
+      </div>
+      <div id="diagnosticsContent"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" type="button" id="exportDiagnosticsBtn">Stáhnout protokol</button>
+        <button class="btn btn-secondary" type="button" id="runDiagnosticsBtn">Spustit všechny testy</button>
+        <button class="btn btn-primary" value="default">Zavřít</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="domus-core.js"></script>
+  <script src="db.js"></script>
+  <script src="domus-audit.js"></script>
+  <script src="domus-backup.js"></script>
+  <script src="domus-premium.js"></script>
+  <script src="domus-performance.js"></script>
+  <script src="domus-diagnostics.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

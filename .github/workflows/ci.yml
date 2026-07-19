@@ -1,0 +1,55 @@
+name: DOMUS Studio CI
+on:
+  push: { branches: [main, develop] }
+  pull_request:
+  workflow_dispatch:
+permissions: { contents: read }
+jobs:
+  quality:
+    name: Quality (${{ matrix.os }})
+    strategy: { fail-fast: false, matrix: { os: [ubuntu-latest, windows-latest] } }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm ci
+      - run: python -m pip install --disable-pip-version-check beautifulsoup4
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run check:generated
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Tauri Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Tauri Rust validation
+        working-directory: src-tauri
+        run: cargo check
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: domus-test-artifacts-${{ matrix.os }}
+          path: |
+            FINALNI-OVERENI.txt
+            TESTOVANI.txt
+            build-manifest.json
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm ci
+      - run: python -m pip install beautifulsoup4
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+      - env: { CHROME_PATH: "${{ steps.chrome.outputs.chrome-path }}" }
+        run: npm run test:all

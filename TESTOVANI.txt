@@ -1,0 +1,53 @@
+DOMUS Studio Premium v7.0.0 – testovací vrstvy
+================================================
+
+AUTOMATICKY OVĚŘENO V TOMTO PROSTŘEDÍ
+
+1. Build
+- 21 aplikačních modulů sestaveno do app.js
+- 7 základních jader zkopírováno do runtime
+- distribuční složka dist vytvořena
+- výsledek: OK
+
+2. Unit a doménové testy
+- validace, migrace, bezpečnost, Verify a ZIP zálohy
+- DXF export, položkové slučování, kalendář záruk a výkon
+- výsledek: OK
+
+3. Statické testy
+- 105 uživatelských akcí má handler
+- 73 statických HTML ID bez kolize
+- PWA, vendor soubory, Tauri struktura a moduly
+- výsledek: OK
+
+4. PowerShell bezpečnost
+- whitelist runtime souborů
+- API autorizace a omezení
+- výsledek: OK
+
+5. Browser smoke
+- 16 pracovních částí
+- Test Lab bez FAIL
+- Precision 2D, filtry, vymazání a Undo
+- mobilní viewport 390 px bez přetékání
+- mobilní export dostupný
+- výsledek: OK
+
+6. Další kontroly
+- npm audit: 0 známých zranitelností
+- generated-check: OK
+- YAML workflow: OK
+
+PŘESKOČENO LOKÁLNÍM PROSTŘEDÍM
+
+- HTTP premium smoke: spravovaný Chromium blokuje loopback
+- IndexedDB HTTP round-trip: spravovaný Chromium blokuje IndexedDB ve vloženém dokumentu
+
+Oba testy zůstávají aktivní v GitHub CI, kde běží v běžném runneru.
+
+NEOVĚŘENO LOKÁLNĚ
+
+- fyzické sestavení Tauri instalátorů, protože prostředí nemá Rust/Cargo ani platformní SDK,
+- Authenticode podpis Windows, protože nebyl poskytnut kódový certifikát,
+- podpis updater artefaktů, protože soukromý klíč patří do GitHub Secrets,
+- reálný LiDAR, RoomPlan a XR hardware.

@@ -1,0 +1,12 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+globalThis.window=globalThis;globalThis.location={protocol:'file:'};
+for(const file of ['domus-premium.js','domus-performance.js'])vm.runInThisContext(fs.readFileSync(new URL(`../${file}`,import.meta.url),'utf8'),{filename:file});
+assert.equal(DomusPremium.RELEASE.version,'7.0.0');assert.equal(DomusPremium.RELEASE.schemaVersion,7);
+const plan={scale:100,walls:[{id:'w1',x1:0,y1:0,x2:400,y2:0}],objects:[{id:'o1',type:'Skříň',layer:'architecture',shape:'box',x:20,y:20,width:80,depth:60,height:200}]};
+const dxf=DomusPremium.exportDxf(plan,{projectName:'Test',variantName:'A'});assert.match(dxf,/SECTION/);assert.match(dxf,/DOMUS_WALLS/);assert.match(dxf,/Skříň/);
+const local={id:'p',updatedAt:'2026-01-01T00:00:00Z',variants:[{id:'v',updatedAt:'2026-01-01T00:00:00Z',materials:[],costs:{lines:[{id:'c1',name:'A',updatedAt:'2026-01-01T00:00:00Z'}]},plan:{walls:[],objects:[]}}],survey:{field:{sessions:[]},photo:{annotations:[]}},lifecycle:{entries:[],warranties:[],passport:[]}};
+const remote=structuredClone(local);remote.updatedAt='2026-01-02T00:00:00Z';remote.variants[0].costs.lines[0]={id:'c1',name:'B',updatedAt:'2026-01-02T00:00:00Z'};remote.variants[0].plan.objects.push({id:'o',type:'Prvek',updatedAt:'2026-01-02T00:00:00Z'});
+const merged=DomusPremium.mergeProjects(local,remote);assert.equal(merged.project.variants[0].costs.lines[0].name,'B');assert.equal(merged.project.variants[0].plan.objects.length,1);assert.ok(merged.conflicts.length>=1);
+assert.match(DomusPremium.warrantyIcs({lifecycle:{warranties:[{id:'z',item:'Čerpadlo',purchaseDate:'2026-01-10',warrantyMonths:24}]}}),/BEGIN:VCALENDAR/);
+const metrics=await DomusPerformance.analyze({variants:[{plan:{walls:new Array(3),objects:new Array(4)},materials:new Array(2),ai:{photoSet:[]},field:{sessions:[]}}]});assert.equal(metrics.source,'main-thread');assert.ok(metrics.score>0);assert.deepEqual(DomusPerformance.virtualSlice([1,2,3,4],1,2),[2,3]);
+console.log('premium-tests: OK');

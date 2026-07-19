@@ -1,0 +1,37 @@
+{
+  "version": "7.0.0",
+  "schemaVersion": 7,
+  "generatedAt": "2026-07-19T18:56:25.328Z",
+  "appFragments": [
+    "00-shell.js",
+    "10-ui-foundation.js",
+    "15-premium-foundation.js",
+    "20-project-model.js",
+    "30-render-shell.js",
+    "40-render-capture.js",
+    "50-render-design.js",
+    "55-premium-design.js",
+    "60-render-delivery.js",
+    "65-premium-report.js",
+    "70-events-actions.js",
+    "75-premium-actions.js",
+    "80-ai-field-sync.js",
+    "85-premium-sync.js",
+    "90-photo-plan-canvas.js",
+    "95-premium-plan-canvas.js",
+    "100-section-model-xr.js",
+    "105-premium-3d.js",
+    "110-backup-export.js",
+    "115-desktop-updater.js",
+    "120-canvas-utils-init.js"
+  ],
+  "coreModules": [
+    "db.js",
+    "domus-audit.js",
+    "domus-backup.js",
+    "domus-core.js",
+    "domus-diagnostics.js",
+    "domus-performance.js",
+    "domus-premium.js"
+  ]
+}
