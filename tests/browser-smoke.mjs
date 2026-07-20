@@ -51,7 +51,14 @@ if(dashboard.cards<1) console.error('DASHBOARD DEBUG',dashboard,'ERRORS',errors)
 assert.ok(dashboard.cards>=1,'Dashboard musí obsahovat projekt');
 assert.match(dashboard.text,/DOMUS/i);
 await evaluate(`document.querySelector('[data-action="open-project"]').click()`);
-await sleep(250);
+for (let attempt = 0; attempt < 50; attempt += 1) {
+  if (await evaluate(`!!document.querySelector('[data-action="back-dashboard"]')`)) break;
+  await sleep(50);
+}
+assert.equal(await evaluate(`!!document.querySelector('[data-action="back-dashboard"]')`), true, 'Projekt se v izolovaném browser testu neotevřel.');
+const openedProjectDiagnostics = await evaluate(`DomusDiagnostics.runAll({includeServices:false})`);
+const openedProjectSmoke = openedProjectDiagnostics.results.find((item) => item.id === 'project-smoke');
+assert.equal(openedProjectSmoke?.status, 'pass', `Test Lab nevidí otevřený projekt: ${JSON.stringify(openedProjectSmoke)}`);
 const tabs=['overview','field','photo','ai','plan','library','section','model','presentation','comparison','materials','budget','audit','rfq','diary','pdf'];
 const results={};
 for(const tab of tabs){

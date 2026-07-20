@@ -11,7 +11,7 @@ const DomusDiagnostics = (() => {
   const STATUS_ORDER = Object.freeze({ fail: 0, warn: 1, pass: 2, skip: 3 });
   let config = null;
   let lastReport = null;
-  let running = false;
+  let activeRun = null;
 
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',
@@ -367,9 +367,7 @@ const DomusDiagnostics = (() => {
         </article>`).join('')}</section>`).join('')}`;
   }
 
-  async function runAll(options = {}) {
-    if (running) return lastReport;
-    running = true;
+  async function executeRun(options = {}) {
     const background = !!options.background;
     const includeServices = options.includeServices !== false;
     if (!background) renderLoading();
@@ -387,7 +385,7 @@ const DomusDiagnostics = (() => {
     const results = [];
     for (const definition of definitions) results.push(await runCase(definition, context));
     results.sort((a, b) => (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) || a.category.localeCompare(b.category, 'cs') || a.label.localeCompare(b.label, 'cs'));
-    lastReport = {
+    const report = {
       release: RELEASE,
       ranAt: new Date().toISOString(),
       durationMs: Math.round(performance.now() - started),
@@ -396,10 +394,29 @@ const DomusDiagnostics = (() => {
       counts: summarize(results),
       results,
     };
-    updateBadge(lastReport);
-    if (!background) renderReport(lastReport);
-    running = false;
-    return lastReport;
+    lastReport = report;
+    updateBadge(report);
+    if (!background) renderReport(report);
+    return report;
+  }
+
+  async function runAll(options = {}) {
+    // A background self-test can still be running when an administrator or CI
+    // requests a fresh report. Never return a stale dashboard report for a
+    // newly opened project: wait for the in-flight run and execute the explicit
+    // request against the current application state.
+    while (activeRun) {
+      const completed = await activeRun;
+      if (options.background) return completed;
+    }
+
+    const task = executeRun(options);
+    activeRun = task;
+    try {
+      return await task;
+    } finally {
+      if (activeRun === task) activeRun = null;
+    }
   }
 
   function reportAsText(report) {

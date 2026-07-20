@@ -78,11 +78,23 @@ if (!loaded || loaded.projects < 1) {
 const dashboardReport = await evaluate(`DomusDiagnostics.runAll({includeServices:false})`);
 assert.equal(dashboardReport.counts.fail, 0, `Test Lab na dashboardu hlásí FAIL: ${JSON.stringify(dashboardReport.results.filter(r=>r.status==='fail'))}`);
 assert.ok(dashboardReport.counts.pass >= 16, `Na HTTP se očekává nejméně 16 PASS, výsledek: ${JSON.stringify(dashboardReport.counts)}`);
-await evaluate(`document.querySelector('[data-action="open-project"]').click()`);
-await sleep(350);
+const openedProjectId = await evaluate(`(()=>{const button=document.querySelector('[data-action="open-project"]');const id=button?.dataset.id||'';button?.click();return id;})()`);
+let workspaceState = null;
+for (let attempt = 0; attempt < 80; attempt += 1) {
+  workspaceState = await evaluate(`({
+    opened: !!document.querySelector('[data-action="back-dashboard"]'),
+    title: document.querySelector('.workspace-head h1')?.textContent || '',
+    dashboardCards: document.querySelectorAll('[data-action="open-project"]').length,
+    body: document.body.innerText.slice(0, 800)
+  })`);
+  if (workspaceState.opened) break;
+  await sleep(100);
+}
+assert.equal(workspaceState?.opened, true, `Projekt ${openedProjectId || '(bez ID)'} se neotevřel. Stav: ${JSON.stringify(workspaceState)}`);
 const projectReport = await evaluate(`DomusDiagnostics.runAll({includeServices:false})`);
 assert.equal(projectReport.counts.fail, 0, `Test Lab v projektu hlásí FAIL: ${JSON.stringify(projectReport.results.filter(r=>r.status==='fail'))}`);
-assert.ok(projectReport.results.find((item) => item.id === 'project-smoke' && item.status === 'pass'), 'Smoke test otevřeného projektu musí projít.');
+const projectSmoke = projectReport.results.find((item) => item.id === 'project-smoke');
+assert.equal(projectSmoke?.status, 'pass', `Smoke test otevřeného projektu musí projít. Výsledek: ${JSON.stringify(projectSmoke)}; workspace: ${JSON.stringify(workspaceState)}`);
 
 const premiumUi = await evaluate(`(async()=>{
   const clickTab=(name)=>document.querySelector('[data-tab="'+name+'"]')?.click();
