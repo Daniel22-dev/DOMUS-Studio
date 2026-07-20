@@ -1,8 +1,8 @@
-const CACHE = 'domus-studio-v7-0-0';
+const CACHE = 'domus-studio-v7-0-0-r2';
 const CORE = [
   './', './index.html', './styles.css', './domus-core.js', './db.js', './domus-audit.js',
   './domus-backup.js', './domus-premium.js', './domus-performance.js', './domus-diagnostics.js', './app.js', './manifest.webmanifest', './icon.svg', './icon-192.png',
-  './icon-512.png', './icon-maskable-512.png', './workers/project-metrics-worker.js', './vendor/three.module.min.js', './vendor/OrbitControls.js', './vendor/GLTFExporter.js', './vendor/tauri-core.js', './vendor/tauri-updater.js', './vendor/tauri-process.js', './vendor/external/tslib/tslib.es6.js'
+  './icon-512.png', './icon-maskable-512.png', './workers/project-metrics-worker.js', './vendor/three.core.min.js', './vendor/three.module.min.js', './vendor/OrbitControls.js', './vendor/GLTFExporter.js', './vendor/tauri-core.js', './vendor/tauri-updater.js', './vendor/tauri-process.js', './vendor/external/tslib/tslib.es6.js'
 ];
 const MAX_RUNTIME_ITEMS = 40;
 

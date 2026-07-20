@@ -16,14 +16,16 @@ const freePort = () => new Promise((resolve, reject) => {
 });
 const httpPort = await freePort();
 const cdpPort = await freePort();
-const env = { ...process.env, DOMUS_HTTP_PORT: String(httpPort), DOMUS_CDP_PORT: String(cdpPort) };
+const httpHost = process.env.DOMUS_HTTP_HOST || '127.0.0.1';
+const httpBind = process.env.DOMUS_HTTP_BIND || (httpHost === '127.0.0.1' ? '127.0.0.1' : '0.0.0.0');
+const env = { ...process.env, DOMUS_HTTP_PORT: String(httpPort), DOMUS_CDP_PORT: String(cdpPort), DOMUS_HTTP_HOST: httpHost };
 const children = [];
 const start = (command, args, options = {}) => { const child = spawn(command, args, { cwd: ROOT, env, stdio: options.stdio || ['ignore', 'ignore', 'inherit'] }); children.push(child); return child; };
 const stop = () => children.reverse().forEach((child) => { try { child.kill('SIGTERM'); } catch {} });
 process.on('exit', stop); process.on('SIGINT', () => { stop(); process.exit(130); });
-start('python3', ['-m', 'http.server', String(httpPort), '--bind', '127.0.0.1']);
+start('python3', ['-m', 'http.server', String(httpPort), '--bind', httpBind]);
 for (let attempt = 0; attempt < 40; attempt += 1) {
-  try { const response = await fetch(`http://127.0.0.1:${httpPort}/index.html`); if (response.ok) break; } catch {}
+  try { const response = await fetch(`http://${httpHost}:${httpPort}/index.html`); if (response.ok) break; } catch {}
   if (attempt === 39) throw new Error('Testovací HTTP server se nespustil.');
   await new Promise((resolve) => setTimeout(resolve, 100));
 }

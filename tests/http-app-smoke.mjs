@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 const cdpPort = process.env.DOMUS_CDP_PORT || '9222';
 const httpPort = process.env.DOMUS_HTTP_PORT || '8008';
+const httpHost = process.env.DOMUS_HTTP_HOST || '127.0.0.1';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let target = null;
 for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -47,7 +48,7 @@ async function evaluate(expression, retries = 4) {
   throw new Error('Vyhodnocení v prohlížeči se nepodařilo dokončit.');
 }
 await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
-const navigation = await send('Page.navigate', { url: `http://127.0.0.1:${httpPort}/index.html` });
+const navigation = await send('Page.navigate', { url: `http://${httpHost}:${httpPort}/index.html` });
 if (/ERR_BLOCKED_BY_ADMINISTRATOR/.test(navigation.errorText || '')) {
   console.log('http-app-smoke: SKIPPED – testovací Chromium v tomto prostředí blokuje přístup na loopback. GitHub CI test spustí v běžném runneru.');
   socket.close();
@@ -92,17 +93,22 @@ const premiumUi = await evaluate(`(async()=>{
   const redo=!!document.querySelector('[data-action="redo-plan"]');
   clickTab('pdf'); await new Promise(r=>setTimeout(r,80));
   const report=/Report Studio/i.test(document.body.innerText);
+  const threeCoreAsset=(await fetch('vendor/three.core.min.js',{method:'HEAD'})).ok;
   const threeAsset=(await fetch('vendor/three.module.min.js',{method:'HEAD'})).ok;
+  let threeImport=false;
+  try { const three=await import(new URL('vendor/three.module.min.js', location.href).href); threeImport=typeof three.Scene==='function' && typeof three.WebGLRenderer==='function'; } catch {}
   clickTab('model'); await new Promise(r=>setTimeout(r,1000));
   const modelCanvas=!!document.getElementById('modelCanvas');
   const threeFailure=/nepodařilo načíst/i.test(document.getElementById('threeLoading')?.textContent||'');
-  return {libraryCards,precision,redo,report,threeAsset,modelCanvas,threeFailure};
+  return {libraryCards,precision,redo,report,threeCoreAsset,threeAsset,threeImport,modelCanvas,threeFailure};
 })()`);
 assert.ok(premiumUi.libraryCards > 0, 'Prémiová knihovna je prázdná.');
 assert.equal(premiumUi.precision, true, 'Precision 2D se nevykreslil.');
 assert.equal(premiumUi.redo, true, 'Precision 2D nemá Redo.');
 assert.equal(premiumUi.report, true, 'Report Studio se nevykreslilo.');
+assert.equal(premiumUi.threeCoreAsset, true, 'Three.js core runtime asset není dostupný.');
 assert.equal(premiumUi.threeAsset, true, 'Three.js runtime asset není dostupný.');
+assert.equal(premiumUi.threeImport, true, 'Three.js modul nebo jeho relativní závislosti nelze importovat.');
 assert.equal(premiumUi.modelCanvas, true, 'RealSpace 3D canvas se nevykreslil.');
 assert.equal(premiumUi.threeFailure, false, 'RealSpace 3D ohlásil chybu načtení.');
 

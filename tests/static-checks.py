@@ -32,7 +32,7 @@ for forbidden in ["'.json'", "'.ps1'", "'.dat'"]:
 if '$env:LOCALAPPDATA' not in server: errors.append('Server neukládá data do LocalAppData')
 if 'Require-SyncToken' not in server: errors.append('Chybí autorizace synchronizace')
 if 'Get-ChildItem $root -Recurse' in server: errors.append('Server používá příliš široký rekurzivní whitelist')
-for runtime_name in ['index.html','app.js','db.js','domus-core.js','domus-audit.js','domus-backup.js','domus-premium.js','domus-performance.js','domus-diagnostics.js','service-worker.js','manifest.webmanifest','vendor/three.module.min.js','workers/project-metrics-worker.js']:
+for runtime_name in ['index.html','app.js','db.js','domus-core.js','domus-audit.js','domus-backup.js','domus-premium.js','domus-performance.js','domus-diagnostics.js','service-worker.js','manifest.webmanifest','vendor/three.core.min.js','vendor/three.module.min.js','workers/project-metrics-worker.js']:
     if f"'{runtime_name}'" not in server: errors.append(f'Runtime soubor není v explicitním whitelistu: {runtime_name}')
 
 manifest=(ROOT/'manifest.webmanifest').read_text(encoding='utf-8')
@@ -55,9 +55,26 @@ for element_id in ['diagnosticsBtn','diagnosticsDialog','diagnosticsContent','ru
 if "DomusDiagnostics.mount" not in app: errors.append('Test Lab není připojen k aplikačnímu kontextu')
 if "diagnosticRoundTrip" not in (ROOT/'db.js').read_text(encoding='utf-8'): errors.append('Chybí izolovaný IndexedDB diagnostický test')
 
-for required in ['vendor/three.module.min.js','vendor/OrbitControls.js','vendor/GLTFExporter.js','src-tauri/tauri.conf.json','src-tauri/icons/icon.ico','src-tauri/icons/icon.icns','dist/index.html']:
+for required in ['vendor/three.core.min.js','vendor/three.module.min.js','vendor/OrbitControls.js','vendor/GLTFExporter.js','src-tauri/tauri.conf.json','src-tauri/icons/icon.ico','src-tauri/icons/icon.icns','dist/index.html']:
     if not (ROOT/required).exists(): errors.append(f'Chybí premium/distribuční soubor {required}')
 
+
+
+# Every relative ES-module dependency in vendor/ must exist. This catches split packages
+# such as Three.js where three.module.min.js imports three.core.min.js.
+module_pattern = re.compile(r"(?:import|export)\s*(?:[^'\";]*?\sfrom\s*)?['\"]([^'\"]+)['\"]|import\s*\(\s*['\"]([^'\"]+)['\"]\s*\)")
+for js_file in sorted((ROOT/'vendor').rglob('*.js')):
+    source = js_file.read_text(encoding='utf-8', errors='ignore')
+    for match in module_pattern.finditer(source):
+        specifier = match.group(1) or match.group(2)
+        if not specifier or not specifier.startswith('.'):
+            continue
+        target = (js_file.parent/specifier).resolve()
+        candidates = [target]
+        if target.suffix == '':
+            candidates += [target.with_suffix('.js'), target/'index.js']
+        if not any(candidate.is_file() for candidate in candidates):
+            errors.append(f'Chybí relativní modul {specifier} importovaný z {js_file.relative_to(ROOT)}')
 
 tauri_config=(ROOT/'src-tauri/tauri.conf.json').read_text(encoding='utf-8')
 if 'DOMUS_UPDATER_PUBLIC_KEY_REPLACE' in tauri_config: errors.append('Tauri konfigurace obsahuje neplatný updater placeholder')

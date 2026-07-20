@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check:generated": "node scripts/check-generated.mjs",
-    "test:unit": "node tests/core-tests.mjs && node tests/premium-tests.mjs",
+    "test:unit": "node tests/core-tests.mjs && node tests/premium-tests.mjs && node tests/vendor-module-tests.mjs",
     "test:static": "python tests/static-checks.py",
     "test:powershell": "python tests/powershell-static.py",
     "test:browser": "node scripts/run-browser-tests.mjs",
@@ -27,5 +27,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^2.8.0"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

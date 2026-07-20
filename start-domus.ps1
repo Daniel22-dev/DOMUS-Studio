@@ -366,7 +366,7 @@ $staticFiles = @(
     'index.html', 'styles.css', 'app.js', 'db.js', 'domus-core.js', 'domus-audit.js',
     'domus-backup.js', 'domus-premium.js', 'domus-performance.js', 'domus-diagnostics.js', 'service-worker.js', 'manifest.webmanifest',
     'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
-    'workers/project-metrics-worker.js', 'vendor/three.module.min.js', 'vendor/OrbitControls.js', 'vendor/GLTFExporter.js',
+    'workers/project-metrics-worker.js', 'vendor/three.core.min.js', 'vendor/three.module.min.js', 'vendor/OrbitControls.js', 'vendor/GLTFExporter.js',
     'vendor/tauri-core.js', 'vendor/tauri-updater.js', 'vendor/tauri-process.js', 'vendor/external/tslib/tslib.es6.js'
 )
 foreach ($relative in $staticFiles) {
