@@ -1,4 +1,4 @@
-const CACHE = 'domus-studio-v7-0-0-r2';
+const CACHE = 'domus-studio-v7-0-0-r3';
 const CORE = [
   './', './index.html', './styles.css', './domus-core.js', './db.js', './domus-audit.js',
   './domus-backup.js', './domus-premium.js', './domus-performance.js', './domus-diagnostics.js', './app.js', './manifest.webmanifest', './icon.svg', './icon-192.png',

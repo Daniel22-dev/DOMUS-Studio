@@ -13,6 +13,9 @@ soup=BeautifulSoup(html,'html.parser')
 ids=[tag.get('id') for tag in soup.find_all(attrs={'id':True})]
 dup=sorted({value for value in ids if ids.count(value)>1})
 if dup: errors.append('Duplicitní HTML ID: '+', '.join(dup))
+meta_csp=soup.find('meta', attrs={'http-equiv': re.compile(r'^Content-Security-Policy$', re.I)})
+if meta_csp and 'frame-ancestors' in (meta_csp.get('content') or ''):
+    errors.append('Direktiva frame-ancestors nesmí být v meta CSP; musí být pouze v HTTP hlavičce')
 
 all_text='\n'.join((ROOT/name).read_text(encoding='utf-8',errors='ignore') for name in ['index.html','app.js','domus-diagnostics.js'])
 actions=set(re.findall(r'data-action=["\']([^"\']+)',all_text))
@@ -31,6 +34,7 @@ for forbidden in ["'.json'", "'.ps1'", "'.dat'"]:
     if forbidden in static_block: errors.append(f'Citlivá přípona ve whitelistu serveru: {forbidden}')
 if '$env:LOCALAPPDATA' not in server: errors.append('Server neukládá data do LocalAppData')
 if 'Require-SyncToken' not in server: errors.append('Chybí autorizace synchronizace')
+if "frame-ancestors 'none'" not in server: errors.append('Serverová CSP hlavička neobsahuje frame-ancestors none')
 if 'Get-ChildItem $root -Recurse' in server: errors.append('Server používá příliš široký rekurzivní whitelist')
 for runtime_name in ['index.html','app.js','db.js','domus-core.js','domus-audit.js','domus-backup.js','domus-premium.js','domus-performance.js','domus-diagnostics.js','service-worker.js','manifest.webmanifest','vendor/three.core.min.js','vendor/three.module.min.js','workers/project-metrics-worker.js']:
     if f"'{runtime_name}'" not in server: errors.append(f'Runtime soubor není v explicitním whitelistu: {runtime_name}')

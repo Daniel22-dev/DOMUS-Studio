@@ -127,7 +127,7 @@ assert.equal(premiumUi.threeFailure, false, 'RealSpace 3D ohlásil chybu načten
 const registration = await evaluate(`(async()=>{const r=await navigator.serviceWorker.getRegistration();return {supported:'serviceWorker' in navigator,registered:!!r};})()`);
 assert.equal(registration.supported, true);
 assert.equal(registration.registered, true, 'Service worker se při HTTP spuštění nezaregistroval.');
-const relevantErrors = errors.filter((item) => !/favicon|404|api\/|Failed to fetch/i.test(item));
+const relevantErrors = errors.filter((item) => !/favicon|404|api\/|Failed to fetch|Content Security Policy directive ['\"]?frame-ancestors['\"]? is ignored when delivered via a <meta> element/i.test(item));
 if (relevantErrors.length) throw new Error(`Chyby při reálném HTTP spuštění:\n${relevantErrors.join('\n')}`);
 console.log(JSON.stringify({ status: 'OK', dashboard: dashboardReport.counts, project: projectReport.counts, premiumUi, serviceWorker: registration }, null, 2));
 socket.close();
