@@ -31,7 +31,7 @@ for (let attempt = 0; attempt < 40; attempt += 1) {
 }
 start(chrome, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', `--remote-debugging-port=${cdpPort}`, `--user-data-dir=/tmp/domus-chromium-test-${cdpPort}`, 'about:blank']);
 await new Promise((resolve) => setTimeout(resolve, 1600));
-for (const test of ['browser-smoke.mjs', 'http-app-smoke.mjs', 'db-browser.mjs']) {
+for (const test of ['browser-smoke.mjs', 'http-app-smoke-v73.mjs', 'db-browser.mjs']) {
   const child = spawn(process.execPath, [path.join(ROOT, 'tests', test)], { cwd: ROOT, env, stdio: 'inherit' });
   const code = await new Promise((resolve) => child.on('exit', resolve));
   if (code !== 0) { stop(); process.exit(code || 1); }
