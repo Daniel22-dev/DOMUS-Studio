@@ -20,7 +20,8 @@
     "build:dev": "node scripts/build.mjs --mode=development",
     "build:prod": "node scripts/build.mjs --mode=production",
     "analyze:architecture": "node scripts/architecture-audit.mjs",
-    "test:build": "node tests/build-output-tests.mjs"
+    "test:build": "node tests/build-output-tests.mjs",
+    "check:lockfile": "node scripts/check-lockfile-registry.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",
