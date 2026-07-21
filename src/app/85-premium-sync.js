@@ -2,10 +2,10 @@
   async function mergeRemoteProject(local, remote, sourceLabel = 'synchronizace') {
     const result = DomusPremium.mergeProjects(local, remote);
     if (result.conflicts.length) {
-      const approved = confirm(`Bylo nalezeno ${result.conflicts.length} souběžných změn. DOMUS je bezpečně sloučí po jednotlivých položkách a u každého konfliktu ponechá novější verzi. Pokračovat?`);
+      const approved = await confirmAction({ title: 'Sloučit souběžné změny?', message: `Bylo nalezeno ${result.conflicts.length} konfliktů. DOMUS je sloučí po jednotlivých položkách a u každého ponechá novější verzi.`, acceptLabel: 'Bezpečně sloučit' });
       if (!approved) return null;
     }
-    const merged = ensureProjectV6(result.project);
+    const merged = ensureProjectV7(result.project);
     merged.syncMerge = { ...(merged.syncMerge||{}), source: sourceLabel, at: new Date().toISOString(), conflictCount: result.conflicts.length };
     return { project: merged, conflicts: result.conflicts };
   }

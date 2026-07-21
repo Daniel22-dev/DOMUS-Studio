@@ -1,7 +1,7 @@
 {
-  "name": "DOMUS Studio v7 Premium",
+  "name": "DOMUS Studio v7.3 Premium",
   "short_name": "DOMUS",
-  "description": "Prémiové local-first projektové centrum s Precision 2D, RealSpace 3D, profesionálními reporty, poptávkami, deníkem a technickým pasem.",
+  "description": "Prémiové local-first projektové centrum s AI vizualizátorem, potvrzovaným projektovým asistentem, Precision 2D, RealSpace 3D, reporty a kompletním manuálem.",
   "id": "./index.html",
   "start_url": "./index.html",
   "scope": "./",

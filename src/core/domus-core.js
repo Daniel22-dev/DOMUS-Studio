@@ -162,6 +162,19 @@
           photo.dataUrl = cleanDataUrl(photo.dataUrl, 'image');
           return Boolean(photo.dataUrl);
         });
+        if (variant.ai.visualizer) {
+          variant.ai.visualizer.generations = (variant.ai.visualizer.generations || []).slice(0, 8).filter((item) => {
+            item.dataUrl = cleanDataUrl(item.dataUrl, 'image');
+            item.name = cleanText(item.name, 160);
+            item.prompt = cleanText(item.prompt, 12000);
+            item.sourcePhotoId = cleanId(item.sourcePhotoId);
+            return Boolean(item.dataUrl);
+          });
+        }
+        if (variant.ai.assistant) {
+          variant.ai.assistant.messages = (variant.ai.assistant.messages || []).slice(-40).map((message) => ({ id: cleanId(message.id), role: message.role === 'user' ? 'user' : 'assistant', text: cleanText(message.text, 12000), createdAt: cleanText(message.createdAt, 80) }));
+          variant.ai.assistant.pendingProposal = variant.ai.assistant.pendingProposal ? validateAiAssistantResponse({ reply: '', proposal: variant.ai.assistant.pendingProposal }).proposal : null;
+        }
       }
       if (variant.diary) {
         for (const entry of variant.diary.entries || []) {
@@ -171,13 +184,13 @@
           });
           entry.documents = (entry.documents || []).filter((document) => {
             document.dataUrl = cleanDataUrl(document.dataUrl, 'document');
-            return Boolean(document.dataUrl);
+            return Boolean(document.dataUrl) || Boolean(document.note);
           });
         }
         for (const warranty of variant.diary.warranties || []) {
           warranty.documents = (warranty.documents || []).filter((document) => {
             document.dataUrl = cleanDataUrl(document.dataUrl, 'document');
-            return Boolean(document.dataUrl);
+            return Boolean(document.dataUrl) || Boolean(document.note);
           });
         }
       }
@@ -232,6 +245,42 @@
       contingencyPercent: finiteNumber(item.contingencyPercent, 10, 0, 100),
       changes: (Array.isArray(item.changes) ? item.changes : []).slice(0, 8).map((change) => cleanText(change, 1000)),
     }));
+  }
+
+  const AI_ASSISTANT_ACTIONS = new Set(['add_object','move_object','resize_object','remove_object','add_material','add_cost','set_contingency','append_notes','set_wall_height','set_surface_material','create_variant']);
+
+  function validateAiAssistantResponse(input) {
+    const value = sanitize(input, 'assistant');
+    if (!value || typeof value !== 'object') throw new Error('AI asistent nevrátil platnou strukturu.');
+    const reply = cleanText(value.reply, 12000);
+    const rawProposal = value.proposal && typeof value.proposal === 'object' ? value.proposal : null;
+    let proposal = null;
+    if (rawProposal) {
+      const actions = (Array.isArray(rawProposal.actions) ? rawProposal.actions : []).slice(0, 12).map((item) => {
+        const type = cleanId(item?.type);
+        if (!AI_ASSISTANT_ACTIONS.has(type)) throw new Error(`AI navrhla nepovolenou akci: ${type || 'bez názvu'}.`);
+        const params = sanitize(item?.params && typeof item.params === 'object' ? item.params : {}, `assistant.${type}`);
+        const cleanParams = {};
+        const textKeys = ['objectId','libraryKey','type','layer','name','category','manufacturer','sku','unit','color','swatch','note','text','surface','materialId'];
+        const numberKeys = ['xMm','yMm','widthMm','depthMm','heightMm','heightCm','heightM','rotation','quantity','unitPrice','wastePercent','percent'];
+        for (const key of textKeys) if (params[key] != null) cleanParams[key] = cleanText(params[key], key === 'text' || key === 'note' ? 6000 : 240);
+        for (const key of numberKeys) if (params[key] != null) cleanParams[key] = finiteNumber(params[key], 0, -100000000, 100000000);
+        if (['move_object','resize_object','remove_object'].includes(type) && !cleanParams.objectId) throw new Error(`Akce ${type} nemá identifikátor prvku.`);
+        if (type === 'add_object' && !cleanParams.libraryKey && !cleanParams.type) throw new Error('Přidávaný prvek nemá typ knihovny.');
+        if (type === 'append_notes' && !cleanParams.text) throw new Error('Doplnění poznámek je prázdné.');
+        if (type === 'set_surface_material' && (!['wall','floor','ceiling'].includes(cleanParams.surface) || !cleanParams.materialId)) throw new Error('Přiřazení povrchu není úplné.');
+        return { type, label: cleanText(item?.label || type, 500), params: cleanParams };
+      });
+      if (actions.length) proposal = {
+        title: cleanText(rawProposal.title || 'Návrh změn', 240),
+        summary: cleanText(rawProposal.summary, 3000),
+        risk: ['low','medium','high'].includes(rawProposal.risk) ? rawProposal.risk : 'medium',
+        assumptions: (Array.isArray(rawProposal.assumptions) ? rawProposal.assumptions : []).slice(0, 12).map((item) => cleanText(item, 1000)),
+        actions,
+      };
+    }
+    if (!reply && !proposal) throw new Error('AI asistent nevrátil odpověď ani návrh změn.');
+    return { reply: reply || 'Připravil jsem návrh změn ke kontrole.', proposal };
   }
 
   function csvCell(value) {
@@ -331,7 +380,7 @@
   window.DomusCore = Object.freeze({
     LIMITS, cleanText, cleanId, cleanColor, cleanHttpUrl, cleanDataUrl, finiteNumber,
     sanitize, secureProject: ensureProjectShape, validateBackup, validateAiAnalysis,
-    validateAiVariants, csvCell, pointInPolygon, rectInsidePolygon, rectDistance,
+    validateAiVariants, validateAiAssistantResponse, csvCell, pointInPolygon, rectInsidePolygon, rectDistance,
     objectRect, geometryDistance,
   });
 })();

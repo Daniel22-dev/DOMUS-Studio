@@ -1,0 +1,40 @@
+DOMUS Studio Premium v7.3 – závěrečné ověření
+Datum: 21. 7. 2026
+
+ROZSAH
+- DOMUS AI Studio: analýza, vizualizátor a projektový asistent
+- potvrzované a vratné změny projektu
+- vestavěný prohledávatelný manuál
+- samostatný HTML a Markdown manuál
+- lokální serverový endpoint pro obrazovou editaci
+- zachování datového schématu 7
+
+VÝSLEDKY
+- npm run build: OK
+- architektonický audit: OK (29 fragmentů, 260 pojmenovaných funkcí, 1 runtime bundle)
+- core-tests: OK
+- premium-tests: OK
+- Three.js r185: OK
+- build-output-tests: OK
+- statické testy: OK (118 akcí, 93 HTML ID)
+- PowerShell serverové kontroly: OK
+- browser test: OK (17 karet)
+- tablet 1024 px: OK, bez vodorovného přetékání
+- telefon 390 px: OK, mobilní nabídka a akce dostupné
+- check:generated: OK
+- npm audit --omit=dev: 0 známých zranitelností
+
+OMEZENÍ TESTOVACÍHO PROSTŘEDÍ
+- Skutečný placený požadavek na OpenAI API nebyl proveden, protože nebyl k dispozici uživatelský API klíč.
+- http-app-smoke byl v izolovaném Chromiu přeskočen kvůli blokovanému loopbacku; běží v GitHub CI.
+- vložený IndexedDB browser scénář byl v izolovaném Chromiu přeskočen; ostatní databázové testy prošly.
+- Rust/Cargo ověření desktopové aplikace se provádí v GitHub CI, pokud lokální počítač nemá Rust toolchain.
+
+DOPORUČENÝ PRVNÍ PROVOZNÍ TEST
+1. Nastavit API klíč pomocí Nastavit-AI-pripojeni.bat.
+2. Založit kopii malého projektu.
+3. Použít jednu anonymizovanou fotografii, jednu variantu a standardní kvalitu.
+4. Zkontrolovat výsledek před/po.
+5. Požádat asistenta pouze o doplnění poznámky.
+6. Zkontrolovat návrh, potvrdit jej a vyzkoušet vrácení.
+7. Vytvořit novou DOMUS ZIP zálohu.

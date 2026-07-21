@@ -203,81 +203,8 @@
       y: (event.clientY - rect.top) * (canvas.height / rect.height),
     };
   }
-
-  function selectedElementDefinition() {
-    return ELEMENT_LIBRARY.find((item) => item.key === state.planElementKey) || ELEMENT_LIBRARY.find((item) => item.layer === state.activeLayer) || ELEMENT_LIBRARY[0];
-  }
-
-  function setupPlanCanvas() {
-    const canvas = document.getElementById('planCanvas');
-    const project = currentProject(); const variant = currentVariant(project);
-    if (!canvas || !variant) return;
-    const plan = variant.plan;
-    let start = null; let current = null;
-    const draw = () => drawPlanCanvas(canvas, variant, start && current ? { start, end: current, tool: state.planTool, definition: selectedElementDefinition() } : null);
-    draw();
-    canvas.style.cursor = state.planTool === 'delete' ? 'not-allowed' : state.planTool === 'select' ? 'pointer' : 'crosshair';
-
-    canvas.onpointerdown = async (event) => {
-      const raw = pointerPoint(canvas, event); const point = { x: snap(raw.x, 10), y: snap(raw.y, 10) };
-      if (state.planTool === 'delete') {
-        const target = findPlanTarget(plan, point, variant);
-        if (target) pushPlanHistory(project, variant);
-        if (target?.kind === 'wall') plan.walls = plan.walls.filter((wall) => wall.id !== target.id);
-        if (target?.kind === 'object') plan.objects = plan.objects.filter((object) => object.id !== target.id);
-        if (target) { await saveProject(project); draw(); toast('Prvek byl odstraněn.'); }
-        return;
-      }
-      if (state.planTool === 'select') {
-        const target = findPlanTarget(plan, point, variant);
-        if (target?.kind === 'object') openObjectDialog(plan.objects.find((object) => object.id === target.id));
-        if (target?.kind === 'wall') {
-          const wall = plan.walls.find((item) => item.id === target.id); const pixels = Math.hypot(wall.x2-wall.x1, wall.y2-wall.y1); const currentLength = pixels / plan.scale;
-          const entered = await askValue({ title: 'Délka stěny', label: 'Přesná délka v metrech', value: currentLength.toFixed(2), type: 'number', min: 0.01, required: true });
-          const exact = parseNum(entered, currentLength);
-          if (entered !== null && exact > 0) { pushPlanHistory(project, variant); const ux=(wall.x2-wall.x1)/pixels; const uy=(wall.y2-wall.y1)/pixels; wall.x2=wall.x1+ux*exact*plan.scale; wall.y2=wall.y1+uy*exact*plan.scale; await saveProject(project); draw(); }
-        }
-        return;
-      }
-      start = point; current = point; canvas.setPointerCapture(event.pointerId);
-    };
-
-    canvas.onpointermove = (event) => {
-      if (!start) return;
-      const raw = pointerPoint(canvas, event); current = { x: snap(raw.x, 10), y: snap(raw.y, 10) };
-      if (state.planTool === 'wall' && event.shiftKey) { if (Math.abs(current.x - start.x) > Math.abs(current.y - start.y)) current.y = start.y; else current.x = start.x; }
-      draw();
-    };
-
-    canvas.onpointerup = async () => {
-      if (!start || !current) return;
-      const width = Math.abs(current.x - start.x); const depth = Math.abs(current.y - start.y);
-      if (state.planTool === 'wall') {
-        const drawnPixels = Math.hypot(current.x - start.x, current.y - start.y);
-        if (drawnPixels > 12) {
-          pushPlanHistory(project, variant);
-          const drawnMeters = drawnPixels / plan.scale; const entered = await askValue({ title: 'Nová stěna', label: 'Přesná délka v metrech', value: drawnMeters.toFixed(2), type: 'number', min: 0.01, required: true });
-          let end = current; const exactMeters = entered === null ? drawnMeters : parseNum(entered, drawnMeters);
-          if (exactMeters > 0) { const ux=(current.x-start.x)/drawnPixels; const uy=(current.y-start.y)/drawnPixels; end={x:start.x+ux*exactMeters*plan.scale,y:start.y+uy*exactMeters*plan.scale}; }
-          plan.walls.push({ id: uid('wall'), x1: start.x, y1: start.y, x2: end.x, y2: end.y });
-        }
-      } else if (state.planTool === 'object') {
-        pushPlanHistory(project, variant);
-        const definition = selectedElementDefinition();
-        let exactWidth = definition.width / 1000 * plan.scale; let exactDepth = definition.depth / 1000 * plan.scale;
-        let x = start.x - exactWidth / 2; let y = start.y - exactDepth / 2;
-        if (width > 15 || depth > 15) {
-          const defaultValue = `${Math.round(Math.max(width, 10) / plan.scale * 1000)} × ${Math.round(Math.max(depth, 10) / plan.scale * 1000)}`;
-          const entered = await askValue({ title: 'Rozměry prvku', label: 'Šířka × hloubka v mm', value: defaultValue, required: true, help: 'Použijte například 900 × 150.' });
-          const parts = String(entered || defaultValue).split(/[x×;,]/i).map((part) => parseNum(part)).filter((value) => value > 0);
-          exactWidth = (parts[0] || definition.width) / 1000 * plan.scale; exactDepth = (parts[1] || definition.depth) / 1000 * plan.scale;
-          x = Math.min(start.x, current.x); y = Math.min(start.y, current.y);
-        }
-        plan.objects.push({ id: uid('object'), type: definition.name, libraryKey: definition.key, layer: definition.layer, shape: definition.shape, x, y, width: exactWidth, depth: exactDepth, height: definition.height, color: definition.color, note: '', materialId: '', hingeSide: definition.key === 'door' ? 'left' : '', opensTo: definition.key === 'door' ? 'inside' : '' });
-      }
-      start = null; current = null; await saveProject(project); draw();
-    };
-  }
+  // selectedElementDefinition is implemented by the premium fragment loaded later in the build.
+  // setupPlanCanvas is implemented by the premium fragment loaded later in the build.
 
   function drawPlanCanvas(canvas, variantOrPlan, preview = null) {
     const variant = variantOrPlan?.plan ? variantOrPlan : { plan: variantOrPlan, section: null, materials: [] };

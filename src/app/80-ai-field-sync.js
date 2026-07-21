@@ -1,4 +1,4 @@
-/* AI workspace, field capture, RoomPlan and LAN synchronization. Source fragment; assembled by scripts/build.mjs. */
+/* AI photo workspace, product extraction and proposal generation. Source fragment; bundled by esbuild. */
 
 
   async function updateRoomPhotoField(id, key, value) {
@@ -74,10 +74,10 @@
       const response = await fetch('/api/status', { cache: 'no-store' });
       if (!response.ok) throw new Error('Lokální server nevrátil stav AI.');
       const data = await response.json();
-      state.aiStatus = { checked: true, configured: Boolean(data.configured), model: data.model || '', message: data.message || '' };
+      state.aiStatus = { checked: true, configured: Boolean(data.configured), model: data.model || '', imageModel: data.imageModel || '', message: data.message || '' };
       if (showToast) toast(data.configured ? 'Cloudová AI je připravena.' : 'AI klíč zatím není nastaven.', data.configured ? '' : 'error');
     } catch (error) {
-      state.aiStatus = { checked: true, configured: false, model: '', message: 'Aplikace běží bez lokálního AI proxy. Spusťte ji přes hlavní BAT soubor.' };
+      state.aiStatus = { checked: true, configured: false, model: '', imageModel: '', message: 'Aplikace běží bez lokálního AI proxy. Spusťte ji přes hlavní BAT soubor.' };
       if (showToast) toast(state.aiStatus.message, 'error');
     }
     if (state.currentTab === 'ai') render();
@@ -139,7 +139,7 @@
       if (state.aiShare.location && project.location) categories.push('lokalita');
       if (state.aiShare.materials) categories.push('materiály a orientační ceny');
       if (state.aiShare.notes && variant.notes) categories.push('poznámky');
-      if (!confirm(`Do cloudové AI budou odeslány: ${categories.join(', ')}. Pokračovat?`)) return;
+      if (!(await confirmAction({ eyebrow: 'Ochrana soukromí', title: 'Odeslat vybraná data do cloudové AI?', message: `Budou odeslány: ${categories.join(', ')}. API klíč zůstává na lokálním serveru.`, acceptLabel: 'Odeslat a analyzovat' }))) return;
       const payload={task, imageDataUrl:task==='space'?dataUrl:null, imageDataUrls:orderedPhotos.map((item)=>item.dataUrl), project:{name:project.name,category:project.category,summary:project.summary,location:state.aiShare.location?project.location:''}, current:{plan:variant.ai.proposedPlan,materials:state.aiShare.materials?variant.materials.map((item)=>({name:item.name,category:item.category,color:item.color,price:item.unitPrice})):[],notes:state.aiShare.notes?variant.notes:''}, photoViews:variant.ai.photoSet.map((item)=>({name:item.name,view:item.view,note:item.note})).slice(0,8)};
       const response=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await response.json(); if(!response.ok||!data.ok) throw new Error(data.error||'AI služba odpověděla chybou.');
       const rawResult=extractJsonText(data.text);
@@ -157,7 +157,7 @@
   async function applyProposedPlan() {
     const width=parseNum(document.getElementById('aiPlanWidth')?.value,0), depth=parseNum(document.getElementById('aiPlanDepth')?.value,0), height=parseNum(document.getElementById('aiPlanHeight')?.value,2.6), shape=document.getElementById('aiPlanShape')?.value||'rectangle';
     if(width<500||depth<500) return toast('Zadejte potvrzenou šířku a hloubku alespoň 500 mm.','error');
-    const project=currentProject(), variant=currentVariant(project); if((variant.plan.walls.length||variant.plan.objects.length)&&!confirm('Nahradit stávající geometrii půdorysu navrženým tvarem? Materiály a rozpočet zůstanou zachovány.')) return;
+    const project=currentProject(), variant=currentVariant(project); if((variant.plan.walls.length||variant.plan.objects.length)&&!(await confirmAction({ title: 'Nahradit geometrii půdorysu?', message: 'Stávající stěny a prvky budou nahrazeny navrženým tvarem. Materiály a rozpočet zůstanou zachovány.', acceptLabel: 'Nahradit geometrii', destructive: true }))) return;
     pushPlanHistory(project, variant); variant.plan.walls=buildPlanWalls(variant.plan,shape,width,depth); variant.plan.objects=[]; variant.plan.wallHeight=height; variant.ai.proposedPlan={shape,widthMm:width,depthMm:depth,wallHeightM:height,verifiedByUser:true}; fitPlanToCanvas(variant.plan); await saveProject(project); state.currentTab='plan'; toast('Základní půdorys byl vytvořen. Doplňte skutečné otvory a instalační body.'); render();
   }
 
@@ -206,197 +206,3 @@
     if(!width||!depth){const dim=text.match(/(?:rozměr[^\d]{0,30})?(\d{2,4})\s*[x×]\s*(\d{2,4})(?:\s*[x×]\s*(\d{1,4}))?\s*(mm|cm)?/i);if(dim){const factor=(dim[4]||'mm').toLowerCase()==='cm'?10:1;width=width||parseNum(dim[1])*factor;depth=depth||parseNum(dim[2])*factor;height=height||(dim[3]?parseNum(dim[3])*factor:0);}}
     const color=product.color||''; return {name:String(name).replace(/\s*[|–-].*$/,'').trim(),manufacturer,sku,width,depth,height,price,color,evidence:`Zdroj ${new URL(sourceUrl).hostname}; nalezené hodnoty: ${[width&&`šířka ${width} mm`,depth&&`hloubka ${depth} mm`,height&&`výška ${height} mm`,price&&`cena ${price} Kč`].filter(Boolean).join(', ')||'jen název produktu'}.`};
   }
-
-  async function addFieldMeasurement() {
-    const label = document.getElementById('fieldMeasureLabel')?.value.trim();
-    const value = document.getElementById('fieldMeasureValue')?.value.trim();
-    if (!label || !value) return toast('Doplň název i hodnotu rozměru.', 'error');
-    const project = currentProject(); const session = currentFieldSession(currentVariant(project));
-    session.measurements.push({ id: uid('measure'), label, value: value.replace(',', '.'), unit: document.getElementById('fieldMeasureUnit').value, category: document.getElementById('fieldMeasureCategory').value, targetId: document.getElementById('fieldMeasureTarget')?.value || '', verified: false, source: 'estimate', confidence: 40, note: '', createdAt: new Date().toISOString() });
-    session.updatedAt = new Date().toISOString(); await saveProject(project); toast('Rozměr byl uložen.'); render();
-  }
-
-  async function updateFieldPhoto(id, key, value) {
-    const project = currentProject(); const photo = currentFieldSession(currentVariant(project)).photos.find((item) => item.id === id); if (!photo) return; photo[key] = value; await saveProject(project);
-  }
-
-  async function importFieldPhotos() {
-    const files = Array.from(fieldPhotoInput.files || []); fieldPhotoInput.value = ''; if (!files.length) return;
-    const project = currentProject(); const session = currentFieldSession(currentVariant(project));
-    for (const file of files.slice(0, 12)) {
-      try { const dataUrl = await resizeImage(file, 1800, 1400, 0.82); session.photos.push({ id: uid('fieldphoto'), name: file.name.replace(/\.[^.]+$/, ''), note: '', dataUrl, capturedAt: new Date().toISOString(), source: file.type || 'image' }); } catch (error) { console.warn(error); }
-    }
-    session.updatedAt = new Date().toISOString(); await saveProject(project); toast(`${Math.min(files.length, 12)} fotografií bylo uloženo do zaměření.`); render();
-  }
-
-  async function saveFieldLocation() {
-    if (!navigator.geolocation) return toast('Zařízení neposkytuje geolokaci.', 'error');
-    navigator.geolocation.getCurrentPosition(async (position) => { const project = currentProject(); const session = currentFieldSession(currentVariant(project)); session.location = { latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date().toISOString() }; await saveProject(project); toast('Poloha byla uložena pouze do projektu.'); render(); }, (error) => toast(error.message || 'Poloha nebyla povolena.', 'error'), { enableHighAccuracy: true, timeout: 12000 });
-  }
-
-  function parseRoomPlanJson(value) {
-    const root = value?.capturedRoom || value?.room || value;
-    const walls = Array.isArray(root?.walls) ? root.walls : [];
-    const doors = Array.isArray(root?.doors) ? root.doors : [];
-    const windows = Array.isArray(root?.windows) ? root.windows : [];
-    const objects = Array.isArray(root?.objects) ? root.objects : [];
-    const parsedWalls = [];
-    const dimension = (item, index, fallback = 0) => { const d = item?.dimensions || item?.dimension || []; const v = Array.isArray(d) ? Number(d[index]) : Number(d?.[index === 0 ? 'x' : index === 1 ? 'y' : 'z']); return Number.isFinite(v) ? v : fallback; };
-    const transform = (item) => { const raw = item?.transform; if (Array.isArray(raw) && raw.length === 16) return { x: Number(raw[12]) || 0, z: Number(raw[14]) || 0, yaw: Math.atan2(Number(raw[8]) || 0, Number(raw[0]) || 1) }; if (Array.isArray(raw) && Array.isArray(raw[0])) return { x: Number(raw[3]?.[0] ?? raw[0]?.[3]) || 0, z: Number(raw[3]?.[2] ?? raw[2]?.[3]) || 0, yaw: Math.atan2(Number(raw[2]?.[0]) || 0, Number(raw[0]?.[0]) || 1) }; const center = item?.center || item?.position || {}; return { x: Number(center.x ?? center[0]) || 0, z: Number(center.z ?? center[2]) || 0, yaw: Number(item?.yaw) || 0 }; };
-    walls.forEach((item, index) => { const width = dimension(item, 0, 1); const height = dimension(item, 1, 2.5); const t = transform(item); const dx = Math.cos(t.yaw) * width / 2; const dz = Math.sin(t.yaw) * width / 2; parsedWalls.push({ id: item.identifier || `wall-${index}`, x1: t.x - dx, y1: t.z - dz, x2: t.x + dx, y2: t.z + dz, width, height }); });
-    return { walls: parsedWalls, counts: { walls: walls.length, doors: doors.length, windows: windows.length, objects: objects.length } };
-  }
-
-  async function importScanFile() {
-    const file = scanInput.files?.[0]; scanInput.value = ''; if (!file) return;
-    const ext = (file.name.split('.').pop() || '').toLowerCase(); const project = currentProject(); const session = currentFieldSession(currentVariant(project));
-    const scan = { id: uid('scan'), name: file.name, format: ext || 'soubor', size: file.size, importedAt: new Date().toISOString(), summary: 'Externí prostorový podklad; původní soubor zůstává mimo zálohu DOMUS.', roomPlan: null };
-    if (ext === 'json' && file.size < 20 * 1024 * 1024) {
-      try { const data = JSON.parse(await file.text()); scan.roomPlan = parseRoomPlanJson(data); const c = scan.roomPlan.counts; scan.summary = `Datový sken: ${c.walls} stěn, ${c.doors} dveří, ${c.windows} oken a ${c.objects} objektů. Geometrii je nutné ověřit.`; } catch (error) { scan.summary = `JSON se nepodařilo rozpoznat jako RoomPlan: ${error.message}`; }
-    }
-    session.scans.push(scan); session.updatedAt = new Date().toISOString(); await saveProject(project); toast('Prostorový sken byl zaevidován.'); render();
-  }
-
-  async function applyRoomPlanScan(id) {
-    const project = currentProject(); const variant = currentVariant(project); const scan = currentFieldSession(variant).scans.find((item) => item.id === id); const walls = scan?.roomPlan?.walls || [];
-    if (!walls.length) return toast('Sken neobsahuje převoditelné stěny.', 'error');
-    if (variant.plan.walls.length && !confirm('Nahradit současné stěny pracovním obrysem z RoomPlan?')) return;
-    pushPlanHistory(project, variant);
-    const xs = walls.flatMap((item) => [item.x1, item.x2]); const ys = walls.flatMap((item) => [item.y1, item.y2]); const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys); const width = Math.max(0.1, maxX - minX), depth = Math.max(0.1, maxY - minY); const scale = variant.plan.scale;
-    const uniformScale = Math.min(scale, 760 / width, 500 / depth);
-    const offsetX = 140 + (760 - width * uniformScale) / 2;
-    const offsetY = 100 + (500 - depth * uniformScale) / 2;
-    variant.plan.walls = walls.map((item) => ({ id: uid('wall'), x1: offsetX + (item.x1 - minX) * uniformScale, y1: offsetY + (item.y1 - minY) * uniformScale, x2: offsetX + (item.x2 - minX) * uniformScale, y2: offsetY + (item.y2 - minY) * uniformScale, layer: 'architecture', source: 'roomplan-unverified' }));
-    variant.plan.scale = uniformScale;
-    variant.plan.wallHeight = round(Math.max(...walls.map((item) => item.height || 2.5)), 2); fitPlanToCanvas(variant.plan); await saveProject(project); state.currentTab = 'plan'; toast('Pracovní stěny byly převedeny do 2D. Všechny rozměry ověř.'); render();
-  }
-
-  function syncAuthHeaders() {
-    return state.syncStatus.token ? { Authorization: `Bearer ${state.syncStatus.token}` } : {};
-  }
-
-  function clearSyncToken() {
-    state.syncStatus.token = '';
-    state.syncStatus.tokenExpiresAt = '';
-    state.syncStatus.paired = false;
-    safeStorageRemove('domusSyncToken');
-    safeStorageRemove('domusSyncTokenExpiresAt');
-  }
-
-  async function checkSyncStatus(showToast = false) {
-    const before = JSON.stringify({ enabled: state.syncStatus.enabled, paired: state.syncStatus.paired, localClient: state.syncStatus.localClient, serverUrl: state.syncStatus.serverUrl, message: state.syncStatus.message });
-    try {
-      const response = await fetch('/api/sync/status', { cache: 'no-store', headers: syncAuthHeaders() });
-      const payload = await response.json();
-      state.syncStatus = {
-        ...state.syncStatus,
-        checked: true,
-        enabled: !!payload.enabled,
-        localClient: !!payload.localClient,
-        paired: !!payload.paired || !!payload.localClient,
-        pairingCode: payload.pairingCode || '',
-        pairingExpiresAt: payload.pairingExpiresAt || '',
-        serverUrl: payload.serverUrl || '',
-        deviceName: payload.deviceName || '',
-        message: payload.message || '',
-      };
-      if (payload.localClient && payload.enabled) {
-        try { const devicesResponse = await fetch('/api/sync/devices', { cache: 'no-store' }); const devicesPayload = await devicesResponse.json(); state.syncStatus.devices = devicesPayload.devices || []; }
-        catch { state.syncStatus.devices = []; }
-      }
-      if (!state.syncStatus.localClient && state.syncStatus.tokenExpiresAt && new Date(state.syncStatus.tokenExpiresAt) <= new Date()) clearSyncToken();
-      if (showToast) toast(payload.enabled ? (state.syncStatus.paired ? 'Synchronizace je připravena.' : 'Server je dostupný; zařízení ještě spárujte.') : payload.message || 'Synchronizace není aktivní.', payload.enabled ? '' : 'error');
-    } catch (error) {
-      state.syncStatus = { ...state.syncStatus, checked: true, enabled: false, paired: false, message: 'Aplikace běží bez synchronizačního serveru.' };
-      if (showToast) toast(state.syncStatus.message, 'error');
-    }
-    const after = JSON.stringify({ enabled: state.syncStatus.enabled, paired: state.syncStatus.paired, localClient: state.syncStatus.localClient, serverUrl: state.syncStatus.serverUrl, message: state.syncStatus.message });
-    if (state.currentTab === 'field' && before !== after) render();
-    return state.syncStatus;
-  }
-
-  async function pairSyncDevice(rawCode) {
-    const code = String(rawCode || '').replace(/\D/g, '').slice(0, 6);
-    if (!/^\d{6}$/.test(code)) return toast('Zadejte přesně šestimístný jednorázový kód.', 'error');
-    try {
-      const response = await fetch('/api/sync/pair', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, deviceName: `${navigator.platform || 'Zařízení'} · ${navigator.userAgentData?.platform || 'prohlížeč'}`.slice(0, 80) }),
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.ok || !payload.token) throw new Error(payload.error || 'Spárování se nezdařilo.');
-      state.syncStatus.token = payload.token;
-      state.syncStatus.tokenExpiresAt = payload.expiresAt || '';
-      state.syncStatus.paired = true;
-      safeStorageSet('domusSyncToken', payload.token);
-      safeStorageSet('domusSyncTokenExpiresAt', payload.expiresAt || '');
-      toast('Zařízení bylo bezpečně spárováno.');
-      await checkSyncStatus(false);
-      render();
-    } catch (error) { toast(error.message || 'Spárování se nezdařilo.', 'error'); }
-  }
-
-  async function syncFetch(path, options = {}) {
-    const response = await fetch(path, { ...options, headers: { ...syncAuthHeaders(), ...(options.headers || {}) } });
-    let payload = {};
-    try { payload = await response.json(); } catch { }
-    if (response.status === 401) clearSyncToken();
-    if (!response.ok || payload.ok === false) throw new Error(payload.error || 'Synchronizační požadavek selhal.');
-    return payload;
-  }
-
-  async function pushCurrentProjectToSync(silent = false) {
-    if (state.syncBusy) return;
-    state.syncBusy = true;
-    try {
-      if (!state.syncStatus.checked) await checkSyncStatus(false);
-      if (!state.syncStatus.enabled || (!state.syncStatus.localClient && !state.syncStatus.paired)) throw new Error('Zařízení není spárováno se synchronizačním serverem.');
-      const project = DomusCore.secureProject(currentProject());
-      await syncFetch('/api/sync/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project }) });
-      currentVariant(project).field.sync.lastPushAt = new Date().toISOString();
-      await saveProject(project, true, true);
-      if (!silent) toast('Projekt byl odeslán do lokální synchronizace.');
-    } catch (error) { if (!silent) toast(error.message, 'error'); }
-    finally { state.syncBusy = false; if (state.currentTab === 'field' && !silent) render(); }
-  }
-
-  async function pullSyncProject(projectId) {
-    const payload = await syncFetch('/api/sync/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId }) });
-    return ensureProjectV6(DomusCore.secureProject(payload.project));
-  }
-
-  async function pullCurrentProjectFromSync() {
-    try {
-      if (!state.syncStatus.checked) await checkSyncStatus(false);
-      const local = currentProject();
-      const remote = await pullSyncProject(local.id);
-      if (new Date(remote.updatedAt) <= new Date(local.updatedAt) && !confirm('Lokální projekt není starší. Přesto jej nahradit verzí ze synchronizace?')) return;
-      await DomusDB.createSnapshot(state.projects, `Před načtením projektu ${local.name} ze synchronizace`);
-      const index = state.projects.findIndex((item) => item.id === remote.id);
-      if (index >= 0) state.projects[index] = remote; else state.projects.unshift(remote);
-      remote.variants.forEach((variant) => { variant.field.sync.lastPullAt = new Date().toISOString(); });
-      await DomusDB.put(remote, { skipSnapshot: true });
-      state.currentProjectId = remote.id;
-      toast('Projekt byl načten ze synchronizace.'); render();
-    } catch (error) { toast(error.message, 'error'); }
-  }
-
-  async function importProjectsFromSync() {
-    try {
-      await checkSyncStatus(false);
-      if (!state.syncStatus.enabled || (!state.syncStatus.localClient && !state.syncStatus.paired)) throw new Error('Zařízení není spárováno se synchronizačním serverem.');
-      const payload = await syncFetch('/api/sync/list', { cache: 'no-store' });
-      if (!payload.projects?.length) return toast('Synchronizační úložiště je prázdné.', 'error');
-      await DomusDB.createSnapshot(state.projects, 'Před hromadným načtením ze synchronizace');
-      let imported = 0;
-      for (const meta of payload.projects) {
-        const project = await pullSyncProject(meta.id);
-        const index = state.projects.findIndex((item) => item.id === project.id);
-        if (index >= 0) {
-          if (new Date(project.updatedAt) > new Date(state.projects[index].updatedAt)) { state.projects[index] = project; await DomusDB.put(project, { skipSnapshot: true }); imported += 1; }
-        } else { state.projects.unshift(project); await DomusDB.put(project, { skipSnapshot: true }); imported += 1; }
-      }
-      toast(imported ? `Načteno nebo aktualizováno ${imported} projektů.` : 'Všechny místní projekty jsou aktuální.'); render();
-    } catch (error) { toast(error.message, 'error'); }
-  }
-

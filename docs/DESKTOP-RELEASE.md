@@ -29,7 +29,7 @@ Bez nich se vytvoří funkční, ale Authenticode nepodepsaný Windows balíček
 
 1. Nastavte Secrets.
 2. Zkontrolujte zelený CI běh.
-3. Vytvořte tag, například `v7.0.0`.
+3. Vytvořte tag, například `v7.2.0`.
 4. Workflow sestaví platformní balíčky a draft release.
 5. Zkontrolujte instalační soubory a `latest.json`.
 6. Publikujte release.

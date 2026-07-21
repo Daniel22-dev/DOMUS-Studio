@@ -21,7 +21,7 @@
     copy.variants = (copy.variants || []).map((variant) => ({ ...variant, id: uid('variant') }));
     copy.activeVariantId = copy.variants[0]?.id || '';
     usedIds.add(nextId);
-    return ensureProjectV6(copy);
+    return ensureProjectV7(copy);
   }
 
   async function importBackup(event) {
@@ -32,10 +32,25 @@
       const validated = await DomusBackup.readProjectBackup(file);
       const raw = validated.projects || [];
       if (!raw.length) throw new Error('Záloha neobsahuje žádné projekty.');
-      const incoming = raw.map((project, index) => ensureProjectV6(DomusCore.secureProject(project, index)));
+      const incoming = raw.map((project, index) => ensureProjectV7(DomusCore.secureProject(project, index)));
       const collisions = incoming.filter((project) => state.projects.some((existing) => existing.id === project.id)).length;
-      const replace = collisions ? confirm(`Záloha obsahuje ${incoming.length} projektů a ${collisions} shodných identifikátorů.\n\nOK = nahradit shodné projekty\nZrušit = importovat je jako nové kopie`) : true;
-      if (!collisions && !confirm(`Importovat ${incoming.length} projektů? Před importem bude vytvořen bod obnovy.`)) return;
+      let replace = true;
+      if (collisions) {
+        const choice = await askChoice({
+          eyebrow: 'Bezpečný import zálohy',
+          title: 'Jak naložit se shodnými projekty?',
+          message: `Záloha obsahuje ${incoming.length} projektů a ${collisions} shodných identifikátorů. Před importem bude vytvořen bod obnovy.`,
+          acceptLabel: 'Nahradit shodné',
+          cancelLabel: 'Importovat jako kopie',
+        });
+        if (!choice) return;
+        replace = choice === 'confirm';
+      } else if (!(await confirmAction({
+        eyebrow: 'Bezpečný import zálohy',
+        title: `Importovat ${incoming.length} projektů?`,
+        message: 'Před importem bude automaticky vytvořen bod obnovy současného stavu.',
+        acceptLabel: 'Importovat projekty',
+      }))) return;
       await DomusDB.createSnapshot(state.projects, `Před importem ${file.name}`);
       const map = new Map(state.projects.map((project) => [project.id, project]));
       const usedIds = new Set(map.keys());

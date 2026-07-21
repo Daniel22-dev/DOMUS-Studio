@@ -44,6 +44,9 @@ required=[
     'function Require-SyncToken',
     "if ($path -eq '/api/product'",
     "if ($path -eq '/api/ai'",
+    "if ($path -eq '/api/image'",
+    "function Invoke-DomusImageEdit",
+    "gpt-image-2",
     "if ($path -eq '/api/sync/pair'",
     "if ($path -eq '/api/sync/push'",
     "if ($path -eq '/api/sync/list'",
@@ -62,6 +65,7 @@ for item in required:
 
 assert re.search(r"/api/product'.{0,180}Require-LocalApi", server, re.S), 'produktové API není lokální'
 assert re.search(r"/api/ai'.{0,180}Require-LocalApi", server, re.S), 'AI API není lokální'
+assert re.search(r"/api/image'.{0,180}Require-LocalApi", server, re.S), 'obrazové API není lokální'
 for endpoint in ('push','list','pull'):
     assert re.search(rf"/api/sync/{endpoint}'.{{0,180}}Require-SyncToken", server, re.S), f'sync {endpoint} není autorizován'
 

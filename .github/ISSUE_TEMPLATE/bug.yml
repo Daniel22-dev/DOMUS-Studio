@@ -7,7 +7,7 @@ body:
     attributes: { label: Co se stalo, description: Popište kroky, očekávaný a skutečný výsledek. }
     validations: { required: true }
   - type: input
-    attributes: { label: Verze, placeholder: 7.0.0 }
+    attributes: { label: Verze, placeholder: 7.3.0 }
     validations: { required: true }
   - type: textarea
     attributes: { label: Test Lab, description: Vložte anonymizovaný TXT protokol. }

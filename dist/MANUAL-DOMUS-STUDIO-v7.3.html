@@ -1,0 +1,318 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DOMUS Studio v7.3 – kompletní manuál</title><style>:root{color-scheme:dark;--bg:#0b1217;--panel:#121d24;--line:#2a3942;--text:#edf2f4;--muted:#a5b2b9;--accent:#d7aa68}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#081015,#111d24);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:980px;margin:auto;padding:42px 24px 90px}header{padding:34px;border:1px solid var(--line);border-radius:24px;background:rgba(18,29,36,.94);box-shadow:0 24px 70px rgba(0,0,0,.28)}header p{color:var(--muted);font-size:1.08rem}nav{position:sticky;top:0;z-index:2;margin:18px 0;padding:12px 16px;border:1px solid var(--line);border-radius:16px;background:rgba(11,18,23,.94);backdrop-filter:blur(16px)}nav a{color:var(--accent);margin-right:14px;text-decoration:none}article{padding:10px 26px 30px;border:1px solid var(--line);border-radius:22px;background:rgba(18,29,36,.94)}h1{font-size:clamp(2rem,5vw,3.8rem);line-height:1.05;margin:0 0 16px}h2{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:1.55rem}h3{color:var(--accent)}p,li{max-width:80ch}strong{color:#fff}code{background:#071015;border:1px solid var(--line);padding:2px 6px;border-radius:6px}blockquote{border-left:4px solid var(--accent);background:rgba(215,170,104,.08);padding:14px 18px;margin:18px 0;border-radius:0 12px 12px 0}li+li{margin-top:7px}@media(max-width:650px){main{padding:18px 12px 60px}header,article{padding:20px 16px}nav{position:static}}</style></head><body><main><header><p>DOMUS Studio Premium · uživatelská dokumentace</p><h1>Kompletní manuál v7.3</h1><p>Od prvního zaměření přes AI vizualizaci a přesný návrh až po rozpočet, realizaci a zálohu.</p></header><nav><a href="#obsah">Začátek</a><a href="./index.html">Otevřít DOMUS</a></nav><article id="obsah"><h1>DOMUS Studio Premium v7.3 – kompletní uživatelský manuál</h1>
+<h2>1. Co DOMUS je a co není</h2>
+<p>DOMUS Studio je local-first projektové centrum pro rekonstrukce, technické úpravy domu, interiéry a zahradu. Spojuje zaměření, fotografie, AI analýzu, fotorealistické koncepční vizualizace, přesný 2D návrh, 3D kontrolu, materiály, rozpočet, poptávku, realizační deník a technický pas.</p>
+<p>DOMUS není autorizovaná projektová dokumentace. Nenahrazuje statika, projektanta, požární specialisty, elektrikáře, revizního technika ani odborné zaměření. AI výstupy jsou pracovní návrhy a vždy se musí ověřit skutečným měřením a odborným posouzením.</p>
+<h2>2. První spuštění</h2>
+<ol>
+<li>Rozbalte aplikaci do vlastní složky.</li>
+<li>Spusťte <code>Spustit-DOMUS-Studio.bat</code>. Tím se otevře lokální server a aplikace v prohlížeči.</li>
+<li>Nevstupujte běžně přes samotný <code>index.html</code>; bez lokálního serveru nefungují cloudová AI, import výrobků ani synchronizace.</li>
+<li>Založte první projekt nebo otevřete pilotní projekt.</li>
+<li>Otevřete <strong>Úložiště a obnova</strong> a zkontrolujte, že je úložiště dostupné.</li>
+<li>Vytvořte první úplnou zálohu a uložte ji mimo složku aplikace.</li>
+</ol>
+<h3>Jak jsou uložena data</h3>
+<p>Projektová data se ukládají lokálně v prohlížeči tohoto zařízení. Fotografie, přílohy a AI vizualizace mohou zabírat výrazně více místa než samotné výkresy. Aplikace vytváří body obnovy, koš a úplné ZIP zálohy s kontrolou integrity. Záloha je jediný bezpečný způsob přenosu projektu mimo zařízení, pokud nepoužíváte lokální synchronizaci.</p>
+<h2>3. Doporučený pracovní postup</h2>
+<ol>
+<li><strong>Založení projektu:</strong> název, kategorie, umístění, stručný cíl.</li>
+<li><strong>Zaměření:</strong> fyzicky změřené rozměry a instalační body.</li>
+<li><strong>Fotodokumentace:</strong> celkové pohledy a kritické detaily.</li>
+<li><strong>DOMUS AI Studio:</strong> analýza fotografií, koncepční obrazové varianty a konzultace s asistentem.</li>
+<li><strong>Precision 2D:</strong> přesný půdorys, vrstvy, dveře, okna, rozvody a vybavení.</li>
+<li><strong>Řez a 3D:</strong> kontrola výšek, skladeb a prostorových vztahů.</li>
+<li><strong>Materiály:</strong> konkrétní výrobky, rozměry, vydatnost, prořez a ceny.</li>
+<li><strong>Rozpočet:</strong> práce, doprava, vedlejší náklady, rezerva a DPH.</li>
+<li><strong>DOMUS Verify:</strong> vyřešení kolizí, neověřených hodnot a technických rizik.</li>
+<li><strong>Poptávka a report:</strong> podklad pro dodavatele nebo projektanta.</li>
+<li><strong>Deník a pasport:</strong> skutečný průběh, zakryté konstrukce, záruky a doklady.</li>
+<li><strong>Záloha:</strong> po každém zásadním milníku.</li>
+</ol>
+<h2>4. Projekty a varianty</h2>
+<p>Každý projekt může obsahovat více variant. Varianty sdílejí skutečný stav, fotodokumentaci a realizační životní cyklus projektu, ale mají vlastní návrh, materiály, rozpočet a AI pracovní prostor.</p>
+<p>Novou variantu použijte, když chcete zachovat původní návrh a porovnat jiné řešení. Variantu pojmenujte podle jejího smyslu, například „Walk-in sprcha – vyvážená“ nebo „Pergola – prémiová krytina“.</p>
+<h2>5. Zaměření skutečného stavu</h2>
+<h3>Zásady měření</h3>
+<ul>
+<li>Měřte od pevných a znovu dohledatelných bodů: rohů, os, hran otvorů a hotových podlah.</li>
+<li>Každý kritický rozměr doplňte poznámkou, odkud a kam byl měřen.</li>
+<li>Rozměr označte jako ověřený jen tehdy, pokud byl skutečně fyzicky změřen.</li>
+<li>Odhad, údaj z fotografie a údaj z LiDARu ponechte jako odhadovaný zdroj.</li>
+<li>U rozvodů evidujte také výšku nad referenční podlahou.</li>
+<li>Před zakrytím konstrukce pořiďte fotografii s metrem nebo jiným měřítkem.</li>
+</ul>
+<h3>Telefon a LiDAR</h3>
+<p>Mobilní zaměření a RoomPlan/LiDAR slouží jako rychlý podklad. Přesnost závisí na zařízení, světle, povrchu a geometrii prostoru. Kritické rozměry vždy ověřte pásmem nebo laserovým dálkoměrem.</p>
+<h2>6. Fotografie skutečného stavu</h2>
+<p>V kartě <strong>Fotografie</strong> vložte hlavní snímek, který bude reprezentovat projekt. Pro kreslení skutečných kót:</p>
+<ol>
+<li>Zvolte <strong>Kalibrace měřítka</strong>.</li>
+<li>Klikněte na dva konce známé vzdálenosti.</li>
+<li>Zadejte fyzicky změřenou hodnotu.</li>
+<li>Teprve poté kreslete kóty.</li>
+</ol>
+<p>Poznámky v obraze používejte pro rizika, požadované změny a body k doměření. Hlavní fotografie může být následně přidána do sady DOMUS Vision.</p>
+<h2>7. DOMUS AI Studio</h2>
+<p>AI Studio obsahuje tři samostatné pracovní režimy:</p>
+<ul>
+<li><strong>Analýza:</strong> rozpoznání viditelných prvků, rizik a měření k ověření.</li>
+<li><strong>Vizualizátor:</strong> fotorealistická koncepční úprava skutečného snímku.</li>
+<li><strong>Asistent:</strong> chat nad strukturou projektu s potvrzovanými změnami.</li>
+</ul>
+<p>Cloudové funkce vyžadují vlastní OpenAI API klíč a připojení k internetu. Klíč zůstává na lokálním serveru a nevkládá se do projektu ani zálohy.</p>
+<h2>8. Nastavení AI připojení</h2>
+<ol>
+<li>Zavřete DOMUS Studio.</li>
+<li>Spusťte <code>Nastavit-AI-pripojeni.bat</code>.</li>
+<li>Vložte svůj OpenAI API klíč.</li>
+<li>Pro textovou analýzu a asistenta ponechte doporučený textový model, pokud nemáte konkrétní důvod ke změně.</li>
+<li>Pro vizualizace ponechte <code>gpt-image-2</code>.</li>
+<li>Znovu spusťte DOMUS Studio a v AI Studio klikněte na <strong>Ověřit připojení</strong>.</li>
+</ol>
+<p>API spotřeba se účtuje na vašem API účtu. Obrazové generování je obvykle nákladnější než textová odpověď. Počet variant a vysokou kvalitu proto používejte cíleně.</p>
+<h2>9. AI analýza fotografií</h2>
+<h3>Příprava sady</h3>
+<p>Nahrajte 2–6 snímků stejného prostoru:</p>
+<ul>
+<li>čelní pohled,</li>
+<li>levý a pravý pohled,</li>
+<li>zadní pohled,</li>
+<li>podlahu nebo strop, pokud jsou důležité,</li>
+<li>detail rozvodů, poškození nebo konstrukčního uzlu.</li>
+</ul>
+<p>Každý snímek pojmenujte, nastavte směr pohledu a přidejte krátkou poznámku.</p>
+<h3>Lokální kontrola</h3>
+<p>Lokální kontrola neopouští zařízení. Hodnotí čitelnost snímku, světlo a dominantní linie. Neumí spolehlivě určit konkrétní stavební prvek.</p>
+<h3>Cloudová analýza</h3>
+<p>Před spuštěním zkontrolujte, zda chcete sdílet lokalitu, materiály a projektové poznámky. Aplikace poté odešle vybrané fotografie a kontext. Výstup obsahuje:</p>
+<ul>
+<li>shrnutí viditelného stavu,</li>
+<li>míru jistoty,</li>
+<li>rozpoznané prvky,</li>
+<li>možná rizika,</li>
+<li>seznam rozměrů k ověření,</li>
+<li>pracovní návrh základního tvaru místnosti.</li>
+</ul>
+<p>Rozpoznaný prvek lze vložit do 2D výkresu. Vloží se jako pracovní objekt a jeho polohu i rozměry musíte ručně ověřit.</p>
+<h2>10. AI vizualizátor reálné fotografie</h2>
+<h3>K čemu slouží</h3>
+<p>Vizualizátor vytvoří koncepční obraz budoucího stavu ze skutečné fotografie. Snaží se zachovat perspektivu, obálku prostoru a prvky, které označíte jako neměnné.</p>
+<h3>Doporučené zadání</h3>
+<p>Zadání rozdělte do čtyř částí:</p>
+<ol>
+<li><strong>Hlavní požadavek:</strong> stručný popis výsledku.</li>
+<li><strong>Zachovat:</strong> okna, dveře, rozvody, perspektivu, konkrétní zařízení.</li>
+<li><strong>Odstranit:</strong> původní vaničku, skříňku, obklad nebo jiný prvek.</li>
+<li><strong>Přidat nebo změnit:</strong> nové vybavení, povrchy, osvětlení a barevnost.</li>
+</ol>
+<p>Příklad:</p>
+<blockquote>Odstraň sprchovou vaničku a vytvoř bezbariérový walk-in kout. Zachovej dveře, okno, pračku a stávající vodovodní vývody. Přidej liniový žlab u zadní stěny, nerezový sprchový panel na levou stěnu a hnědou velkoformátovou dlažbu. Zachovej skutečnou perspektivu a rozměrové vztahy místnosti.</blockquote>
+<h3>Zamknutí prvků</h3>
+<p>Pokud jste předtím spustili analýzu, zobrazí se rozpoznané prvky. Zaškrtněte dveře, okna, rozvody nebo jiné části, které se nesmějí měnit. Přesto výsledek vždy vizuálně zkontrolujte.</p>
+<h3>Kvalita a počet variant</h3>
+<ul>
+<li><strong>Střední kvalita:</strong> rychlejší pracovní návrhy.</li>
+<li><strong>Vysoká kvalita:</strong> finální prezentační návrh, vyšší spotřeba API.</li>
+<li><strong>1 varianta:</strong> přesné zadání a úsporný provoz.</li>
+<li><strong>2–3 varianty:</strong> hledání směru nebo porovnání stylů.</li>
+</ul>
+<h3>Vyhodnocení výsledku</h3>
+<p>Posuvníkem porovnejte snímek před a po. Kontrolujte zejména:</p>
+<ul>
+<li>zda zůstala perspektiva,</li>
+<li>zda se neposunuly dveře a okna,</li>
+<li>zda nevznikly nemožné rozvody,</li>
+<li>zda materiály odpovídají zadání,</li>
+<li>zda AI nepřidala nepožadovaný objekt.</li>
+</ul>
+<p>Vybranou variantu přeneste do karty <strong>Před / po</strong>. Vizualizace není technickým výkresem a nelze z ní odečítat přesné rozměry.</p>
+<h2>11. Projektový AI asistent</h2>
+<h3>Co asistent vidí</h3>
+<p>Asistent dostává strukturovaný kontext aktivní varianty:</p>
+<ul>
+<li>projekt a základní výměry,</li>
+<li>2D prvky včetně identifikátorů a rozměrů,</li>
+<li>materiály,</li>
+<li>nákladové položky,</li>
+<li>rezervu a orientační součet,</li>
+<li>dostupné prvky knihovny,</li>
+<li>podle vašich přepínačů také lokalitu a poznámky.</li>
+</ul>
+<p>Fotografie se do běžného chatu neposílají.</p>
+<h3>Jak zadávat požadavky</h3>
+<p>Buďte konkrétní. U posunu nebo změny rozměru používejte přesnou hodnotu:</p>
+<ul>
+<li>„Posuň umyvadlo o 300 mm doprava.“</li>
+<li>„Přidej podlahovou vpusť 150 mm od zadní stěny a označ polohu jako neověřenou.“</li>
+<li>„Doplň materiál hydroizolace a orientační náklad na práci.“</li>
+<li>„Vytvoř novou prémiovou variantu, původní ponech beze změny.“</li>
+</ul>
+<h3>Návrh změn a potvrzení</h3>
+<p>Asistent může odpovědět pouze textem, nebo připravit návrh akcí. Návrh se zobrazí v pravém panelu a obsahuje:</p>
+<ul>
+<li>název a shrnutí,</li>
+<li>míru rizika,</li>
+<li>předpoklady k ověření,</li>
+<li>jednotlivé akce.</li>
+</ul>
+<p>Projekt se nezmění, dokud nestisknete <strong>Potvrdit a provést</strong> a nepotvrdíte dialog. Po provedení lze změny bezprostředně vrátit.</p>
+<h3>Podporované změny</h3>
+<ul>
+<li>přidání 2D prvku,</li>
+<li>posun prvku,</li>
+<li>změna jeho rozměru,</li>
+<li>odstranění prvku,</li>
+<li>přidání materiálu,</li>
+<li>přidání nákladové položky,</li>
+<li>změna rezervy,</li>
+<li>doplnění poznámek,</li>
+<li>změna výšky stěn,</li>
+<li>přiřazení materiálu povrchu,</li>
+<li>vytvoření nové varianty.</li>
+</ul>
+<p>Pokud chybí přesný rozměr nebo identifikátor, správné chování asistenta je položit otázku, nikoli hodnotu vymyslet.</p>
+<h2>12. Precision 2D</h2>
+<ol>
+<li>Nakreslete uzavřený obrys stěn.</li>
+<li>Nastavte přesné délky a měřítko.</li>
+<li>Vkládejte dveře, okna, vybavení a rozvody.</li>
+<li>Používejte vrstvy: stavba, voda, odpady, elektro, vytápění, vzduchotechnika a zahrada.</li>
+<li>Hotové vrstvy uzamkněte.</li>
+<li>U dveří nastavte stranu pantů a směr otevírání.</li>
+<li>Každému důležitému prvku doplňte poznámku a případně materiál.</li>
+<li>Spusťte DOMUS Verify.</li>
+</ol>
+<p>AI vložený prvek se nepovažuje za ověřený. Upravte jeho polohu, rozměr a vrstvu podle skutečného měření.</p>
+<h2>13. Knihovna, materiály a výrobky</h2>
+<p>Knihovna obsahuje základní technické a stavební prvky. Vlastní položku lze uložit z vybraného objektu.</p>
+<p>U materiálu evidujte:</p>
+<ul>
+<li>výrobce a označení,</li>
+<li>URL výrobku,</li>
+<li>rozměry,</li>
+<li>jednotku a cenu,</li>
+<li>způsob výpočtu,</li>
+<li>vydatnost nebo obsah balení,</li>
+<li>procento prořezu,</li>
+<li>barevnost a poznámky.</li>
+</ul>
+<p>Automatické načtení z odkazu je pomocné. Cena, rozměry a dostupnost musí být před objednávkou zkontrolovány na stránce výrobce nebo v nabídce dodavatele.</p>
+<h2>14. Řez, skladby a RealSpace 3D</h2>
+<p>Řez kontroluje výšky a konstrukční vrstvy. U podlahy, stěny a stropu evidujte skutečné vrstvy a tloušťky.</p>
+<p>3D model vychází z 2D geometrie a přiřazených materiálů. Použijte jej k:</p>
+<ul>
+<li>kontrole prostorových vztahů,</li>
+<li>hledání kolizí,</li>
+<li>prezentaci varianty,</li>
+<li>vytvoření obrázku pro porovnání před a po.</li>
+</ul>
+<p>3D model není statický, výrobní ani BIM model.</p>
+<h2>15. Materiálové výpočty a rozpočet</h2>
+<p>Materiály lze počítat:</p>
+<ul>
+<li>ručně,</li>
+<li>z plochy podlahy,</li>
+<li>z plochy stěn,</li>
+<li>z plochy stropu,</li>
+<li>z obvodu.</li>
+</ul>
+<p>Výpočet zohledňuje vydatnost a prořez. U kusových položek se množství zaokrouhluje nahoru.</p>
+<p>Rozpočet se sestavuje v pořadí:</p>
+<ol>
+<li>materiály,</li>
+<li>práce a ostatní náklady,</li>
+<li>rezerva,</li>
+<li>mezisoučet,</li>
+<li>DPH.</li>
+</ol>
+<p>AI nebo katalogová cena je pouze orientační. Před rozhodnutím ji nahraďte konkrétní cenovou nabídkou.</p>
+<h2>16. DOMUS Verify</h2>
+<p>Kontrola sleduje například:</p>
+<ul>
+<li>uzavřenost půdorysu,</li>
+<li>kolize prvků,</li>
+<li>odstupy vody a elektroinstalace,</li>
+<li>prostor otevírání dveří,</li>
+<li>neověřená měření,</li>
+<li>prvky mimo půdorys.</li>
+</ul>
+<p>Nález lze označit jako vyřešený po skutečné změně nebo doložené kontrole. Přijaté riziko vyžaduje písemné zdůvodnění. Změní-li se podstata nálezu, staré přijetí rizika se automaticky zneplatní.</p>
+<h2>17. Poptávka a Report Studio</h2>
+<p>Poptávka má obsahovat:</p>
+<ul>
+<li>přesný rozsah dodávky,</li>
+<li>co dodávka nezahrnuje,</li>
+<li>požadované termíny,</li>
+<li>otázky pro dodavatele,</li>
+<li>požadovaný rozpad ceny,</li>
+<li>informace o zaměření a nejistotách.</li>
+</ul>
+<p>Report Studio sestavuje podklad z vybraných částí projektu. Před odesláním dodavateli zkontrolujte lokalitu, ceny, osobní údaje a fotografie.</p>
+<h2>18. Realizační deník, technický pas a záruky</h2>
+<p>Během realizace evidujte:</p>
+<ul>
+<li>datum a typ práce,</li>
+<li>dodavatele,</li>
+<li>plánované a skutečné náklady,</li>
+<li>změny proti návrhu,</li>
+<li>fotografie před zakrytím,</li>
+<li>předávací protokoly a doklady,</li>
+<li>záruky a datum jejich konce,</li>
+<li>polohu skrytých rozvodů a konstrukcí.</li>
+</ul>
+<p>Technický pas je nejcennější ve chvíli, kdy obsahuje přesné fotografie a vazbu na skutečné místo.</p>
+<h2>19. Synchronizace notebooku a telefonu</h2>
+<p>Mobilní přístup povolujte jen v důvěryhodné soukromé Wi-Fi síti.</p>
+<ol>
+<li>Na notebooku spusťte povolení mobilního přístupu jako správce.</li>
+<li>Spusťte DOMUS Studio.</li>
+<li>V telefonu otevřete zobrazenou místní adresu.</li>
+<li>Zadejte jednorázový párovací kód.</li>
+<li>Po spárování se používá dlouhý přístupový token.</li>
+<li>Projekt vědomě odešlete nebo stáhněte.</li>
+</ol>
+<p>Před nahrazením projektu z jiného zařízení vytvořte zálohu.</p>
+<h2>20. Zálohy a obnova</h2>
+<p>Doporučený režim:</p>
+<ul>
+<li>po založení projektu,</li>
+<li>po dokončení zaměření,</li>
+<li>po schválení varianty,</li>
+<li>před hromadnou AI změnou,</li>
+<li>před importem z jiného zařízení,</li>
+<li>po dokončení realizace.</li>
+</ul>
+<p>Uchovávejte alespoň jednu kopii mimo počítač. Staré body obnovy a koš pravidelně kontrolujte, ale nemažte je před ověřením nové zálohy.</p>
+<h2>21. Řešení nejčastějších problémů</h2>
+<h3>AI není dostupná</h3>
+<ul>
+<li>Spusťte aplikaci přes hlavní BAT soubor.</li>
+<li>Ověřte připojení k internetu.</li>
+<li>Znovu spusťte nastavení AI klíče.</li>
+<li>Zkontrolujte stav a limity API účtu.</li>
+</ul>
+<h3>Vizualizace mění neměnné prvky</h3>
+<ul>
+<li>Zapište je explicitně do pole <strong>Zachovat</strong>.</li>
+<li>Zaškrtněte je mezi zamknutými prvky.</li>
+<li>Použijte fotografii s menším perspektivním zkreslením.</li>
+<li>Snižte rozsah požadovaných změn a generujte po etapách.</li>
+</ul>
+<h3>Asistent nenabídne změny</h3>
+<p>Pravděpodobně chybí přesný rozměr, poloha nebo identifikátor. Odpovězte na jeho otázku nebo požadavek formulujte konkrétněji.</p>
+<h3>Projekt je velký</h3>
+<p>Odstraňte nepoužívané AI vizualizace, duplicitní fotografie a staré přílohy. Poté vytvořte novou úplnou zálohu.</p>
+<h3>3D model se nezobrazí</h3>
+<p>Obnovte kartu, ověřte WebGL a spusťte vestavěný Test Lab. Na velmi starém nebo omezeném zařízení může být 3D výkon nedostatečný.</p>
+<h2>22. Kontrolní seznam před realizací</h2>
+<ul>
+<li>[ ] Kritické rozměry jsou fyzicky ověřené.</li>
+<li>[ ] Půdorys je uzavřený a ve správném měřítku.</li>
+<li>[ ] Dveře, okna a instalační body mají správnou polohu.</li>
+<li>[ ] Materiály mají konkrétní výrobek a aktuální cenu.</li>
+<li>[ ] Rozpočet obsahuje práci, dopravu, rezervu a případné DPH.</li>
+<li>[ ] DOMUS Verify nemá neřešený kritický nález.</li>
+<li>[ ] AI vizualizace nebyla zaměněna za technický výkres.</li>
+<li>[ ] Dodavatel dostal popsaný rozsah a seznam nejistot.</li>
+<li>[ ] Před zahájením existuje aktuální záloha.</li>
+</ul></article></main></body></html>

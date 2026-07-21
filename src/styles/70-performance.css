@@ -1,0 +1,29 @@
+/* DOMUS Studio v7.2 — large-project rendering and containment. */
+[data-render-region] { min-width: 0; }
+.project-card,
+.material-card,
+.library-card,
+.timeline-entry,
+.passport-card,
+.warranty-card,
+.audit-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
+.material-grid,
+.project-grid,
+.premium-library-grid,
+.timeline,
+.audit-groups {
+  overflow-anchor: none;
+}
+.filter-updating { opacity: .72; transition: opacity 90ms ease; }
+@media print {
+  .project-card,
+  .material-card,
+  .library-card,
+  .timeline-entry,
+  .passport-card,
+  .warranty-card,
+  .audit-item { content-visibility: visible; contain-intrinsic-size: none; }
+}

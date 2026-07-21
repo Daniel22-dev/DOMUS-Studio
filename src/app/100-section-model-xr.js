@@ -70,13 +70,7 @@
     [[y1,-1],[y2,1]].forEach(([y,dir])=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-5,y+dir*8);ctx.lineTo(x+5,y+dir*8);ctx.closePath();ctx.fill();});
     ctx.translate(x-10,(y1+y2)/2);ctx.rotate(-Math.PI/2);ctx.font='700 12px system-ui';const m=ctx.measureText(label);ctx.fillStyle='rgba(8,15,20,.9)';roundRect(ctx,-m.width/2-6,-15,m.width+12,22,5);ctx.fill();ctx.fillStyle='#f4b3a7';ctx.fillText(label,-m.width/2,1);ctx.restore();
   }
-
-  function setupModelCanvas() {
-    const canvas = document.getElementById('modelCanvas');
-    const variant = currentVariant();
-    if (!canvas || !variant) return;
-    drawModelCanvas(canvas, variant.plan, variant, state.modelMode);
-  }
+  // setupModelCanvas is implemented by the premium fragment loaded later in the build.
 
   function drawModelCanvas(canvas, plan, variant = currentVariant(), mode = state.modelMode) {
     const ctx = canvas.getContext('2d'); const w = canvas.width; const h = canvas.height;

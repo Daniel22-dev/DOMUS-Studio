@@ -1,5 +1,5 @@
-/* DOMUS Studio IndexedDB repository v6: projects, binary assets, snapshots and trash */
-window.DomusDB = (() => {
+/* DOMUS Studio IndexedDB repository v7: projects, binary assets, snapshots and trash */
+window.DomusDB ||= (() => {
   'use strict';
 
   const DB_NAME = 'domus-studio';

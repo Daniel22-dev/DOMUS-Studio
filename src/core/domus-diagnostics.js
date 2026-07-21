@@ -1,12 +1,12 @@
-/* DOMUS Studio Test Lab v7.0: safe in-app diagnostics for administrators and releases. */
+/* DOMUS Studio Test Lab v7.3: safe in-app diagnostics for administrators and releases. */
 const DomusDiagnostics = (() => {
   'use strict';
 
   const RELEASE = Object.freeze({
     app: 'DOMUS Studio',
-    version: '7.0.0',
+    version: '7.3.0',
     schemaVersion: 7,
-    architecture: 'modular-source/generated-runtime',
+    architecture: 'esbuild-bundled/local-first',
   });
   const STATUS_ORDER = Object.freeze({ fail: 0, warn: 1, pass: 2, skip: 3 });
   let config = null;

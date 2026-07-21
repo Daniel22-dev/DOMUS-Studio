@@ -204,7 +204,7 @@
     const secured = projects.map((project, index) => window.DomusCore.secureProject(project, index));
     const externalized = await externalize(secured, assets, 'projects');
     const manifest = {
-      app: 'DOMUS Studio', appVersion: '7.0.0', schemaVersion: 7, format: 'domus-backup-zip-v1',
+      app: 'DOMUS Studio', appVersion: '7.3.0', schemaVersion: 7, format: 'domus-backup-zip-v1',
       exportedAt: new Date().toISOString(), projectCount: secured.length,
       assets: Array.from(assets.values(), ({ name, mime, sha256: hash, bytes }) => ({ name, mime, sha256: hash, size: bytes.length })),
       projects: externalized,

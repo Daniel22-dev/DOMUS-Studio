@@ -1,24 +1,6 @@
 /* Undo, notifications, validated dialogs and storage UI. Source fragment; assembled by scripts/build.mjs. */
-  function pushPlanHistory(project, variant = currentVariant(project)) {
-    if (!project || !variant?.plan) return;
-    state.planHistory.push({ projectId: project.id, variantId: variant.id, plan: deepClone(variant.plan), at: Date.now() });
-    if (state.planHistory.length > 30) state.planHistory.splice(0, state.planHistory.length - 30);
-  }
-  async function undoPlanChange() {
-    const project = currentProject(); const variant = currentVariant(project);
-    if (!project || !variant) return;
-    let index = -1;
-    for (let i = state.planHistory.length - 1; i >= 0; i -= 1) {
-      const item = state.planHistory[i];
-      if (item.projectId === project.id && item.variantId === variant.id) { index = i; break; }
-    }
-    if (index < 0) return toast('Pro tento výkres není dostupný předchozí krok.', 'error');
-    const [entry] = state.planHistory.splice(index, 1);
-    variant.plan = deepClone(entry.plan);
-    await saveProject(project);
-    toast('Poslední změna výkresu byla vrácena.');
-    render();
-  }
+  // pushPlanHistory is implemented by the premium fragment loaded later in the build.
+  // undoPlanChange is implemented by the premium fragment loaded later in the build.
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const snap = (value, step = 10) => Math.round(value / step) * step;
   const parseNum = (value, fallback = 0) => {
@@ -94,6 +76,41 @@
     });
   }
 
+  function askChoice({
+    eyebrow = 'Potvrzení akce',
+    title = 'Pokračovat?',
+    message = '',
+    acceptLabel = 'Potvrdit',
+    cancelLabel = 'Zrušit',
+    destructive = false,
+  } = {}) {
+    return new Promise((resolve) => {
+      if (!confirmDialog || !confirmForm) { resolve(null); return; }
+      if (confirmDialog.open) confirmDialog.close('dismiss');
+      const previousFocus = document.activeElement;
+      confirmDialogEyebrow.textContent = eyebrow;
+      confirmDialogTitle.textContent = title;
+      confirmDialogMessage.textContent = message;
+      confirmAcceptBtn.textContent = acceptLabel;
+      confirmCancelBtn.textContent = cancelLabel;
+      confirmAcceptBtn.className = destructive ? 'btn btn-danger' : 'btn btn-primary';
+      confirmDialog.dataset.tone = destructive ? 'danger' : 'default';
+      const onClose = () => {
+        const result = ['confirm', 'cancel'].includes(confirmDialog.returnValue) ? confirmDialog.returnValue : null;
+        confirmDialog.removeEventListener('close', onClose);
+        queueMicrotask(() => previousFocus?.focus?.());
+        resolve(result);
+      };
+      confirmDialog.addEventListener('close', onClose, { once: true });
+      confirmDialog.showModal();
+      queueMicrotask(() => confirmAcceptBtn.focus());
+    });
+  }
+
+  async function confirmAction(options = {}) {
+    return (await askChoice(options)) === 'confirm';
+  }
+
   const formatBytes = (bytes) => {
     const value = Number(bytes || 0);
     if (value < 1024) return `${value} B`;
@@ -115,15 +132,15 @@
       `;
       storageDialogContent.querySelector('#requestPersistenceBtn')?.addEventListener('click', async () => { const granted = await DomusDB.requestPersistence(); toast(granted ? 'Trvalé úložiště bylo povoleno.' : 'Prohlížeč trvalé úložiště nepovolil.', granted ? '' : 'error'); showStorageDialog(); });
       storageDialogContent.querySelector('#storageExportBtn')?.addEventListener('click', exportBackup);
-      storageDialogContent.querySelector('#emptyTrashBtn')?.addEventListener('click', async () => { if (!confirm('Trvale odstranit všechny projekty v koši? Tuto operaci nelze vrátit.')) return; await DomusDB.emptyTrash(); toast('Koš byl vyprázdněn.'); showStorageDialog(); });
+      storageDialogContent.querySelector('#emptyTrashBtn')?.addEventListener('click', async () => { if (!await confirmAction({ title: 'Trvale vyprázdnit koš?', message: 'Všechny projekty v koši budou nenávratně odstraněny.', acceptLabel: 'Vyprázdnit koš', destructive: true })) return; await DomusDB.emptyTrash(); toast('Koš byl vyprázdněn.'); showStorageDialog(); });
       storageDialogContent.querySelectorAll('[data-restore-snapshot]').forEach((button) => button.addEventListener('click', async () => {
-        if (!confirm('Obnovit tento bod? Současný stav bude předem zazálohován.')) return;
+        if (!await confirmAction({ title: 'Obnovit vybraný bod?', message: 'Současný stav bude před obnovou automaticky zazálohován.', acceptLabel: 'Obnovit bod' })) return;
         await DomusDB.createSnapshot(state.projects, 'Před obnovou staršího bodu');
-        const projects = (await DomusDB.restoreSnapshot(button.dataset.restoreSnapshot)).map(ensureProjectV6);
+        const projects = (await DomusDB.restoreSnapshot(button.dataset.restoreSnapshot)).map(ensureProjectV7);
         await DomusDB.replaceProjects(projects);
         state.projects = projects; state.currentProjectId = null; storageDialog.close(); render(); toast('Bod obnovy byl načten.');
       }));
-      storageDialogContent.querySelectorAll('[data-restore-trash]').forEach((button) => button.addEventListener('click', async () => { await DomusDB.restoreTrash(button.dataset.restoreTrash); state.projects = (await DomusDB.getAll()).map(ensureProjectV6); storageDialog.close(); render(); toast('Projekt byl obnoven z koše.'); }));
+      storageDialogContent.querySelectorAll('[data-restore-trash]').forEach((button) => button.addEventListener('click', async () => { await DomusDB.restoreTrash(button.dataset.restoreTrash); state.projects = (await DomusDB.getAll()).map(ensureProjectV7); storageDialog.close(); render(); toast('Projekt byl obnoven z koše.'); }));
       if (!storageDialog.open) storageDialog.showModal();
     } catch (error) { console.error(error); toast('Informace o úložišti nelze načíst.', 'error'); }
   }

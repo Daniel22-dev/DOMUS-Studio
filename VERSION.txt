@@ -1,4 +1,5 @@
 DOMUS Studio Premium
-Version: 7.0.0
-Datové schéma: 7
-Architektura: 21 aplikačních modulů + 7 základních jader
+Version: 7.3.0
+Schema: 7
+Release: AI Visualizer + Project Assistant + Complete Manual
+Build: esbuild development + minified production

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DOMUS Studio 7.2 – technická modernizace</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1217;--panel:#151c23;--line:#29343e;--text:#edf3f6;--muted:#aab7bf;--accent:#d7aa68;--ok:#78c7a2}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#24303a 0,transparent 38%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}.wrap{max-width:1040px;margin:auto;padding:56px 24px 80px}.eyebrow{color:var(--accent);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.78rem}h1{font-size:clamp(2.2rem,5vw,4.7rem);line-height:1.02;margin:.35em 0 .28em;max-width:900px}.lead{font-size:1.2rem;color:var(--muted);max-width:820px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin:38px 0}.card{background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.22)}h2{margin-top:48px;font-size:1.7rem}h3{margin:.1em 0 .5em}p,li{color:var(--muted)}strong{color:var(--text)}.metric{font-size:2rem;color:var(--ok);font-weight:800}.footer{border-top:1px solid var(--line);margin-top:48px;padding-top:24px;color:var(--muted)}
+</style>
+</head>
+<body><main class="wrap">
+<div class="eyebrow">DOMUS Studio Premium · verze 7.2</div>
+<h1>Rychlejší pod kapotou. Bezpečnější pro další růst.</h1>
+<p class="lead">Verze 7.2 zachovává vzhled, data i funkce, ale nahrazuje křehké sestavení profesionálním buildem, zrychluje filtry a chrání další vývoj automatickými architektonickými testy.</p>
+<div class="grid">
+<section class="card"><div class="metric">1 runtime</div><h3>Řízený esbuild</h3><p>Prohlížeč načítá jediný hlavní balík. Vývojová verze je čitelná, produkční minifikovaná a obě mají source mapy.</p></section>
+<section class="card"><div class="metric">−36 %</div><h3>Menší produkční JavaScript</h3><p>Produkční balík se zmenšil přibližně z 482 kB na 309 kB bez odebrání funkcí.</p></section>
+<section class="card"><div class="metric">6 oblastí</div><h3>Cílené filtrování</h3><p>Projekty, materiály, rozpočet, kontrola, deník a knihovna už při hledání nepřekreslují celou aplikaci.</p></section>
+<section class="card"><div class="metric">27 + 7</div><h3>Přehlednější zdroj</h3><p>Aplikační logika je rozdělena do 27 odpovědnostních fragmentů a 7 základních jader.</p></section>
+<section class="card"><div class="metric">SHA-256</div><h3>Reprodukovatelný build</h3><p>Manifest používá obsahový otisk a mapuje generovaný runtime zpět na zdrojové fragmenty.</p></section>
+<section class="card"><div class="metric">0</div><h3>Známé produkční zranitelnosti</h3><p>Závěrečný audit závislostí nehlásí žádnou známou produkční zranitelnost.</p></section>
+</div>
+<h2>Co uživatel pocítí</h2>
+<ul><li>plynulejší psaní a filtrování ve velkých projektech,</li><li>stabilnější fokus a kurzor,</li><li>rychlejší načtení minifikované distribuce,</li><li>stejnou kompatibilitu projektů a záloh jako ve verzi 7.1.</li></ul>
+<h2>Co získává vývoj</h2>
+<ul><li>oddělený development a production build,</li><li>source mapy a mapa řádků jednotlivých fragmentů,</li><li>delegované události místo stovek opakovaných vazeb,</li><li>automatické odhalení duplicitních funkcí a zastaralých výstupů,</li><li>regresní browser test cíleného renderování.</li></ul>
+<div class="footer"><strong>Datové schéma zůstává 7.</strong> Aktualizace nevyžaduje převod projektů. Před přechodem je přesto vhodné vytvořit standardní DOMUS ZIP zálohu.</div>
+</main></body></html>

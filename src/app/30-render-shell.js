@@ -2,7 +2,7 @@
   async function init() {
     try {
       premiumBootstrap();
-      state.projects = (await DomusDB.getAll()).map((project, index) => ensureProjectV6(DomusCore.secureProject(project, index)));
+      state.projects = (await DomusDB.getAll()).map((project, index) => ensureProjectV7(DomusCore.secureProject(project, index)));
       state.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
       if (!state.projects.length) {
         const pilot = seedProject();
@@ -21,7 +21,7 @@
         getProjects: () => state.projects,
         getCurrentProject: currentProject,
         getState: () => state,
-        normalizeProject: (project) => ensureProjectV6(DomusCore.secureProject(project)),
+        normalizeProject: (project) => ensureProjectV7(DomusCore.secureProject(project)),
         computeMetrics: computeProjectMetrics,
         budgetTotal: (variant) => budgetSummary(variant).total,
         toast,
@@ -67,10 +67,10 @@
           </div>
         </div>
         <div class="toolbar-row">
-          <div class="search-wrap"><input id="projectSearch" value="${escapeHtml(state.search)}" placeholder="Hledat projekt, kategorii nebo umístění…" /></div>
-          <div class="toolbar-actions"><button class="btn btn-ghost" data-action="open-onboarding">Průvodce</button><button class="btn btn-secondary" data-action="sync-import-projects">Načíst projekty z notebooku</button><button class="btn btn-primary" data-action="new-project">+ Založit nový projekt</button></div>
+          <div class="search-wrap"><input id="projectSearch" type="search" aria-label="Hledat projekty" value="${escapeHtml(state.search)}" placeholder="Hledat projekt, kategorii nebo umístění…" /></div>
+          <div class="toolbar-actions"><button class="btn btn-ghost" data-action="open-manual-document">Manuál</button><button class="btn btn-ghost" data-action="open-onboarding">Průvodce</button><button class="btn btn-secondary" data-action="sync-import-projects">Načíst projekty z notebooku</button><button class="btn btn-primary" data-action="new-project">+ Založit nový projekt</button></div>
         </div>
-        <div class="project-grid">
+        <div class="project-grid" id="projectGrid" data-render-region="projects">
           ${filtered.length ? filtered.map(renderProjectCard).join('') : `
             <div class="empty-state">
               <strong>Žádný projekt neodpovídá hledání</strong>
@@ -90,7 +90,7 @@
           <span class="status-pill">${escapeHtml(project.status)}</span>
         </div>
         <div class="card-actions">
-          <button data-action="delete-project" data-id="${project.id}" title="Odstranit projekt">×</button>
+          <button data-action="delete-project" data-id="${project.id}" title="Odstranit projekt" aria-label="Odstranit projekt ${escapeHtml(project.name)}">×</button>
         </div>
         <div class="card-body">
           <p class="eyebrow">${escapeHtml(project.category)}</p>
@@ -221,10 +221,11 @@
   function renderWorkspace(project) {
     const variant = currentVariant(project);
     const tabGroups = [
-      { label: 'Projekt', tabs: [['overview', '01', 'Přehled'], ['field', '02', 'Zaměření'], ['photo', '03', 'Fotografie'], ['ai', '04', 'Analýza snímků']] },
+      { label: 'Projekt', tabs: [['overview', '01', 'Přehled'], ['field', '02', 'Zaměření'], ['photo', '03', 'Fotografie'], ['ai', '04', 'AI Studio']] },
       { label: 'Návrh', tabs: [['plan', '05', 'Precision 2D'], ['library', '06', 'Knihovna'], ['section', '07', 'Řezy a skladby'], ['model', '08', 'RealSpace 3D'], ['presentation', '09', 'Prezentace a VR'], ['comparison', '10', 'Před / po']] },
       { label: 'Příprava', tabs: [['materials', '11', 'Materiály'], ['budget', '12', 'Rozpočet'], ['audit', '13', 'Kontrola'], ['rfq', '14', 'Poptávka']] },
       { label: 'Realizace', tabs: [['diary', '15', 'Deník a pasport'], ['pdf', '16', 'Report Studio']] },
+      { label: 'Nápověda', tabs: [['manual', '17', 'Manuál']] },
     ];
     return `
       <section class="workspace app-shell">
@@ -233,10 +234,10 @@
             <p class="eyebrow">${escapeHtml(project.category)}</p>
             <h2>${escapeHtml(project.name)}</h2>
             <p>${escapeHtml(project.location || 'Umístění neuvedeno')} · ${escapeHtml(project.status)}</p>
-            <span class="version-chip">DOMUS v7.0 Premium · Precision 2D + RealSpace 3D</span>
+            <span class="version-chip">DOMUS v7.3 Premium · Precision 2D + RealSpace 3D</span>
           </div>
-          <nav class="nav-stack nav-stack-compact">
-            ${tabGroups.map((group) => `<div class="nav-group"><small>${group.label}</small>${group.tabs.map(([id, index, label]) => `<button class="nav-btn ${state.currentTab === id ? 'active' : ''}" data-tab="${id}"><span class="nav-index">${index}</span>${label}</button>`).join('')}</div>`).join('')}
+          <nav class="nav-stack nav-stack-compact" aria-label="Navigace projektu">
+            ${tabGroups.map((group) => `<div class="nav-group"><small>${group.label}</small>${group.tabs.map(([id, index, label]) => `<button class="nav-btn ${state.currentTab === id ? 'active' : ''}" data-tab="${id}" ${state.currentTab === id ? 'aria-current="page"' : ''}><span class="nav-index" aria-hidden="true">${index}</span>${label}</button>`).join('')}</div>`).join('')}
           </nav>
           <div class="sidebar-footer">
             <button class="btn btn-ghost" data-action="storage-info">Úložiště a obnova</button>
@@ -273,6 +274,7 @@
     if (state.currentTab === 'rfq') return renderRfqTab(project, variant);
     if (state.currentTab === 'diary') return renderDiaryTab(project, variant);
     if (state.currentTab === 'pdf') return renderPdfTab(project, variant);
+    if (state.currentTab === 'manual') return renderManualTab(project, variant);
     return renderOverviewTab(project, variant);
   }
 

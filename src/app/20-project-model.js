@@ -1,4 +1,5 @@
 /* Project factories, migration and persistence orchestration. Source fragment; assembled by scripts/build.mjs. */
+  const LEGACY_ALIAS_OWNER = Symbol('domusLegacyAliasOwner');
   function defaultLayerVisibility() {
     return Object.fromEntries(Object.keys(LAYERS).map((key) => [key, true]));
   }
@@ -34,6 +35,8 @@
         analysis: null, localAnalysis: null,
         proposedPlan: { shape: 'rectangle', widthMm: 3000, depthMm: 2400, wallHeightM: 2.6 },
         variantIdeas: [], lastSource: '', lastRunAt: '',
+        visualizer: { sourcePhotoId: '', brief: '', preserve: '', remove: '', add: '', style: 'balanced', quality: 'medium', size: 'auto', count: 2, lockedElements: [], generations: [], activeGenerationId: '', compareSlider: 50, lastPrompt: '', lastRunAt: '' },
+        assistant: { messages: [], pendingProposal: null, lastResponseId: '', lastRunAt: '' },
       },
       audit: { overrides: {}, manualChecks: [], lastRunAt: '' },
       rfq: { mode: 'technical', title: '', recipient: '', contact: '', deadline: '', scope: '', exclusions: '', questions: '', responseInstructions: '', includePhotos: true, includePrices: false, anonymizeLocation: true, removeGps: true, revision: 0, lastExportAt: '', lastExportHash: '', exportedVariantId: '', projectUpdatedAt: '' },
@@ -44,7 +47,7 @@
 
   function createProject(data) {
     const variant = blankVariant();
-    const project = ensureProjectV6({
+    const project = ensureProjectV7({
       id: uid('project'),
       schemaVersion: 7,
       name: data.name,
@@ -74,7 +77,7 @@
     return 'architecture';
   }
 
-  function ensureProjectV6(project) {
+  function ensureProjectV7(project) {
     project.schemaVersion = 7;
     project.reportRevision = Math.max(1, parseNum(project.reportRevision, 1));
     project.reportRevisionLabel ||= `R${project.reportRevision}`;
@@ -91,14 +94,17 @@
     project.lifecycle.warranties = Array.isArray(project.lifecycle.warranties) ? project.lifecycle.warranties : [];
     project.lifecycle.passport = Array.isArray(project.lifecycle.passport) ? project.lifecycle.passport : [];
     project.variants.forEach((variant) => {
-      const legacyPhoto = variant.photo; const legacyField = variant.field; const legacyDiary = variant.diary;
-      if (!project.survey.photo && legacyPhoto) project.survey.photo = legacyPhoto;
-      if (!project.survey.field && legacyField) project.survey.field = legacyField;
-      if (!project.lifecycle && legacyDiary) project.lifecycle = legacyDiary;
-      try { delete variant.photo; delete variant.field; delete variant.diary; } catch { }
-      Object.defineProperty(variant, 'photo', { configurable: true, enumerable: false, get: () => project.survey.photo, set: (value) => { project.survey.photo = value; } });
-      Object.defineProperty(variant, 'field', { configurable: true, enumerable: false, get: () => project.survey.field, set: (value) => { project.survey.field = value; } });
-      Object.defineProperty(variant, 'diary', { configurable: true, enumerable: false, get: () => project.lifecycle, set: (value) => { project.lifecycle = value; } });
+      if (variant[LEGACY_ALIAS_OWNER] !== project) {
+        const legacyPhoto = variant.photo; const legacyField = variant.field; const legacyDiary = variant.diary;
+        if (!project.survey.photo && legacyPhoto) project.survey.photo = legacyPhoto;
+        if (!project.survey.field && legacyField) project.survey.field = legacyField;
+        if (!project.lifecycle && legacyDiary) project.lifecycle = legacyDiary;
+        try { delete variant.photo; delete variant.field; delete variant.diary; } catch { }
+        Object.defineProperty(variant, 'photo', { configurable: true, enumerable: false, get: () => project.survey.photo, set: (value) => { project.survey.photo = value; } });
+        Object.defineProperty(variant, 'field', { configurable: true, enumerable: false, get: () => project.survey.field, set: (value) => { project.survey.field = value; } });
+        Object.defineProperty(variant, 'diary', { configurable: true, enumerable: false, get: () => project.lifecycle, set: (value) => { project.lifecycle = value; } });
+        Object.defineProperty(variant, LEGACY_ALIAS_OWNER, { configurable: true, enumerable: false, writable: true, value: project });
+      }
       variant.photo ||= { dataUrl: null, annotations: [], calibration: null };
       variant.photo.annotations ||= [];
       variant.plan ||= { scale: 50, wallHeight: 2.6, wallThickness: 0.15, walls: [], objects: [] };
@@ -149,6 +155,15 @@
         proposedPlan: { shape: 'rectangle', widthMm: 3000, depthMm: 2400, wallHeightM: variant.plan.wallHeight || 2.6 },
         variantIdeas: [], lastSource: '', lastRunAt: '', ...(variant.ai || {})
       };
+      variant.ai.visualizer = { sourcePhotoId: '', brief: '', preserve: '', remove: '', add: '', style: 'balanced', quality: 'medium', size: 'auto', count: 2, lockedElements: [], generations: [], activeGenerationId: '', compareSlider: 50, lastPrompt: '', lastRunAt: '', ...(variant.ai.visualizer || {}) };
+      variant.ai.visualizer.lockedElements = Array.isArray(variant.ai.visualizer.lockedElements) ? variant.ai.visualizer.lockedElements.slice(0, 30) : [];
+      variant.ai.visualizer.generations = Array.isArray(variant.ai.visualizer.generations) ? variant.ai.visualizer.generations.slice(0, 8) : [];
+      variant.ai.visualizer.generations.forEach((item, index) => { item.id ||= uid('visual'); item.name ||= `Vizualizace ${index + 1}`; item.createdAt ||= new Date().toISOString(); });
+      if (!variant.ai.visualizer.activeGenerationId || !variant.ai.visualizer.generations.some((item) => item.id === variant.ai.visualizer.activeGenerationId)) variant.ai.visualizer.activeGenerationId = variant.ai.visualizer.generations[0]?.id || '';
+      variant.ai.visualizer.compareSlider = clamp(parseNum(variant.ai.visualizer.compareSlider, 50), 0, 100);
+      variant.ai.visualizer.count = clamp(parseNum(variant.ai.visualizer.count, 2), 1, 3);
+      variant.ai.assistant = { messages: [], pendingProposal: null, lastResponseId: '', lastRunAt: '', ...(variant.ai.assistant || {}) };
+      variant.ai.assistant.messages = Array.isArray(variant.ai.assistant.messages) ? variant.ai.assistant.messages.slice(-40) : [];
       variant.ai.photoSet = Array.isArray(variant.ai.photoSet) ? variant.ai.photoSet : [];
       variant.ai.photoSet.forEach((photo, index) => { photo.id ||= uid('roomphoto'); photo.name ||= `Snímek ${index + 1}`; photo.view ||= 'detail'; photo.note ||= ''; });
       if (!variant.ai.activePhotoId || !variant.ai.photoSet.some((photo) => photo.id === variant.ai.activePhotoId)) variant.ai.activePhotoId = variant.ai.photoSet[0]?.id || '';
@@ -254,7 +269,7 @@
     if (!project) return;
     setSaveState('saving');
     try {
-      ensureProjectV6(project);
+      ensureProjectV7(project);
       project.updatedAt = new Date().toISOString();
       await DomusDB.put(project, { skipSnapshot: true });
       setSaveState('saved');

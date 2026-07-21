@@ -1,5 +1,5 @@
 /* Bootstrap, DOM references, application state and shared constants. Source fragment; assembled by scripts/build.mjs. */
-/* DOMUS Studio v7.0 – hardened storage, verified planning, supplier RFQ and construction passport */
+/* DOMUS Studio v7.3 – hardened storage, verified planning, supplier RFQ and construction passport */
 (() => {
   'use strict';
 
@@ -46,6 +46,13 @@
   const inputDialogHelp = document.getElementById('inputDialogHelp');
   const storageDialog = document.getElementById('storageDialog');
   const storageDialogContent = document.getElementById('storageDialogContent');
+  const confirmDialog = document.getElementById('confirmDialog');
+  const confirmForm = document.getElementById('confirmForm');
+  const confirmDialogEyebrow = document.getElementById('confirmDialogEyebrow');
+  const confirmDialogTitle = document.getElementById('confirmDialogTitle');
+  const confirmDialogMessage = document.getElementById('confirmDialogMessage');
+  const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+  const confirmAcceptBtn = document.getElementById('confirmAcceptBtn');
   let deferredInstallPrompt = null;
 
   const LAYERS = {
@@ -162,8 +169,13 @@
     activeLayer: 'architecture',
     modelMode: 'technical',
     threeD: { angle: 42, tilt: 28, zoom: 1, cameraMode: 'perspective', cutaway: 1, shadows: true, ceiling: false, labels: false },
-    aiStatus: { checked: false, configured: false, model: '', message: 'Stav připojení nebyl ověřen.' },
+    aiStatus: { checked: false, configured: false, model: '', imageModel: '', message: 'Stav připojení nebyl ověřen.' },
     aiBusy: false,
+    aiImageBusy: false,
+    aiChatBusy: false,
+    aiAssistantConsent: false,
+    aiWorkspaceMode: safeStorageGet('domusAiWorkspaceMode') || 'vision',
+    manualSearch: '',
     aiShare: { location: false, materials: true, notes: true },
     diaryFilter: '',
     filters: { materials: '', budget: '', auditText: '', auditSeverity: 'all', auditStatus: 'all' },

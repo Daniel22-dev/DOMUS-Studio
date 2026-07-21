@@ -1,8 +1,8 @@
-# Architektura DOMUS Studio Premium v7
+# Architektura DOMUS Studio Premium v7.2
 
 ## Princip
 
-DOMUS používá architekturu **modulární zdroj + generovaný runtime + desktopový obal**. Zdroj je přehledný pro GitHub, zatímco runtime zůstává použitelný i bez Node.js.
+DOMUS používá architekturu **modulární zdroj + esbuild runtime + local-first data + desktopový obal**. Zdroj zůstává přehledný pro vývoj, zatímco uživatelský ZIP obsahuje hotový runtime použitelný bez Node.js.
 
 ## Vrstvy
 
@@ -18,15 +18,28 @@ DOMUS používá architekturu **modulární zdroj + generovaný runtime + deskto
 
 ### `src/app`
 
-Aplikace je rozdělena do 21 modulů podle odpovědnosti: shell, UI, model projektu, onboarding, dashboard, zaměření, Precision 2D, Report Studio, akce, AI, synchronizace, canvas, RealSpace 3D, zálohy a desktopový updater.
+Aplikace je rozdělena do 27 fragmentů podle odpovědnosti. Samostatné soubory mají zejména stav a shell, UI, projektový model, renderery, globální události, delegaci událostí, lokální vazby aktivního pohledu, action router, dialogy, prémiové akce, AI, terénní zaměření, synchronizaci, 2D canvas, 3D scénu, zálohy a desktopový updater.
+
+Fragmenty sdílejí jednu uzavřenou aplikační oblast. Build při jejich spojení přidává hranice `BEGIN SOURCE` / `END SOURCE` a do manifestu zapisuje rozsahy řádků, aby byla chyba v generovaném runtime dohledatelná zpět ke zdroji.
+
+### `src/styles`
+
+CSS je rozděleno na:
+
+- základní tokeny a layout,
+- historické funkční vrstvy vzhledu,
+- prémiové komponenty 7.1,
+- výkonnostní pravidla 7.2.
+
+`main.css` je jediný vstup. esbuild vytvoří čitelný `styles.css` a minifikovaný `dist/styles.css`, oba se source mapou.
 
 ### `workers`
 
-`project-metrics-worker.js` počítá složitost větších projektů mimo hlavní vlákno.
+`project-metrics-worker.js` počítá náročnější metriky mimo hlavní UI vlákno.
 
 ### `vendor`
 
-Lokální runtime závislosti Three.js a Tauri API. Aplikace není při běhu závislá na CDN.
+Lokální runtime závislosti Three.js a Tauri API. 3D knihovna není součástí hlavního balíku a načítá se až při otevření 3D části. Aplikace není při běhu závislá na CDN.
 
 ### `src-tauri`
 
@@ -34,14 +47,33 @@ Rust/Tauri obal pro instalační balíčky, aktualizace a restart po aktualizaci
 
 ## Build
 
-`scripts/build.mjs`:
+`scripts/build.mjs` používá esbuild a podporuje tři režimy:
 
-1. spojí aplikační fragmenty do `app.js`,
-2. zkopíruje základní jádra,
-3. vytvoří distribuční `dist/`,
-4. vytvoří build manifest.
+- `npm run build` – vývojový runtime i produkční distribuce,
+- `npm run build:dev` – pouze čitelný runtime v kořeni,
+- `npm run build:prod` – pouze minifikovaný `dist/`.
 
-Generované soubory se commitují, aby zůstal zachován jednoduchý ZIP provoz.
+Build:
+
+1. seřadí zdrojové fragmenty deterministicky,
+2. vytvoří generovaný aplikační vstup s mapou fragmentů,
+3. připojí sedm základních jader,
+4. vytvoří jediný JavaScriptový runtime balík,
+5. sestaví rozdělené CSS,
+6. vytvoří externí source mapy,
+7. vytvoří minifikovanou produkční distribuci,
+8. zapíše reprodukovatelný manifest s SHA-256 otiskem zdroje.
+
+Kořenový runtime i `dist/` jsou generované. `npm run check:generated` ověřuje, že odpovídají zdrojům.
+
+## Události a renderování
+
+- Statické ovládací prvky se navazují jednou při inicializaci.
+- Dynamické akce používají delegaci přes `#app` a `closest('[data-action]')`.
+- Action router je oddělený od navazování událostí.
+- Filtry obnovují pouze označenou výsledkovou oblast.
+- Při filtrování se zachová vstup, fokus, kurzor i kořen aplikace.
+- Vazby, které skutečně závisí na canvasu nebo životním cyklu konkrétního pohledu, zůstávají lokální.
 
 ## Datový model
 
@@ -52,9 +84,11 @@ Generované soubory se commitují, aby zůstal zachován jednoduchý ZIP provoz.
 - změny mají `updatedAt` pro rozhodování konfliktů,
 - import starších dat probíhá přes verzované normalizační kroky.
 
+Technická verze 7.2 datový formát nemění.
+
 ## 2D a 3D
 
-Precision 2D zůstává autoritativním geometrickým zdrojem. RealSpace 3D model z něj vytváří Three.js scénu. To zabraňuje rozcházení dvou samostatných modelů.
+Precision 2D je autoritativním geometrickým zdrojem. RealSpace 3D z něj vytváří Three.js scénu, takže se nerozcházejí dva samostatné modely. Životní cyklus 3D uklízí geometrii, materiály, textury, ovládání, renderer i WebGL kontext.
 
 ## Distribuce
 
@@ -63,14 +97,15 @@ Precision 2D zůstává autoritativním geometrickým zdrojem. RealSpace 3D mode
 - Tauri desktop,
 - GitHub Release s updater artefakty.
 
-## Testovací vrstvy
+## Ochranné architektonické testy
 
-1. Test Lab v aplikaci,
-2. unit testy doménových jader,
-3. statické testy HTML, akcí a repozitáře,
-4. PowerShell bezpečnostní testy,
-5. browser smoke test 16 pracovních částí,
-6. HTTP test service workeru a prémiových modulů,
-7. IndexedDB round-trip,
-8. Windows/Linux Rust validace v GitHub CI,
-9. CodeQL a Dependabot.
+1. kontrola duplicitních pojmenovaných funkcí,
+2. kontrola jediného runtime balíku,
+3. kontrola source map a produkční minifikace,
+4. kontrola mapy fragmentů v build manifestu,
+5. kontrola delegovaných akcí,
+6. kontrola cílených výsledkových oblastí,
+7. statická shoda `data-action` a handlerů,
+8. browser ověření, že filtr nezahodí kořen aplikace ani vstup,
+9. `check:generated` s deterministickým manifestem,
+10. Windows/Linux Rust validace v GitHub CI.

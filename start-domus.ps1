@@ -29,6 +29,7 @@ Remove-Item (Join-Path $root '.domus-sync.json') -Force -ErrorAction SilentlyCon
 $maxBodyBytes = @{
     '/api/product' = 32768
     '/api/ai' = 33554432
+    '/api/image' = 50331648
     '/api/sync/pair' = 8192
     '/api/sync/push' = 209715200
     '/api/sync/pull' = 32768
@@ -196,14 +197,19 @@ function Get-AIConfiguration {
     $keyPath = Join-Path $configDir 'ai-key.dat'
     $settingsPath = Join-Path $configDir 'ai-settings.json'
     $model = 'gpt-5-mini'
+    $imageModel = 'gpt-image-2'
     if (Test-Path $settingsPath) {
-        try { $settings = Get-Content $settingsPath -Raw -Encoding UTF8 | ConvertFrom-Json; if (-not [string]::IsNullOrWhiteSpace($settings.model)) { $model = [string]$settings.model } } catch { }
+        try {
+            $settings = Get-Content $settingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if (-not [string]::IsNullOrWhiteSpace($settings.model)) { $model = [string]$settings.model }
+            if (-not [string]::IsNullOrWhiteSpace($settings.imageModel)) { $imageModel = [string]$settings.imageModel }
+        } catch { }
     }
     $apiKey = ''
     if (Test-Path $keyPath) {
         try { $secure = Get-Content $keyPath -Raw | ConvertTo-SecureString; $credential = New-Object System.Management.Automation.PSCredential('domus', $secure); $apiKey = $credential.GetNetworkCredential().Password } catch { $apiKey = '' }
     }
-    return @{ configured = -not [string]::IsNullOrWhiteSpace($apiKey); apiKey = $apiKey; model = $model }
+    return @{ configured = -not [string]::IsNullOrWhiteSpace($apiKey); apiKey = $apiKey; model = $model; imageModel = $imageModel }
 }
 
 function Test-BlockedHost {
@@ -282,7 +288,25 @@ function Get-OutputText {
 function Invoke-DomusAI {
     param($Payload, $Configuration)
     $task = [string]$Payload.task
-    if ($task -eq 'variants') {
+    if ($task -eq 'assistant') {
+        $prompt = @"
+Jsi DOMUS Project Assistant, opatrný český asistent pro plánování stavebních, interiérových a zahradních projektů. Pracuješ pouze s dodanou strukturou aktivní varianty. Nejsi statik, projektant ani revizní technik. Nikdy netvrď, že byla změna provedena. Pokud uživatel žádá změnu, připrav návrh akcí k výslovnému potvrzení. Pokud chybí přesná poloha, rozměr nebo identifikátor prvku, polož doplňující otázku a vrať proposal null. Vrať pouze platný JSON bez markdownu:
+{"reply":"stručná, ale užitečná odpověď v češtině","proposal":null}
+nebo
+{"reply":"vysvětlení návrhu","proposal":{"title":"...","summary":"...","risk":"low|medium|high","assumptions":["co musí uživatel ověřit"],"actions":[{"type":"add_object|move_object|resize_object|remove_object|add_material|add_cost|set_contingency|append_notes|set_wall_height|set_surface_material|create_variant","label":"srozumitelný popis","params":{}}]}}
+Povolené parametry:
+add_object: libraryKey,type,layer,xMm,yMm,widthMm,depthMm,heightCm,rotation,note.
+move_object: objectId,xMm,yMm. resize_object: objectId,widthMm,depthMm,heightCm. remove_object: objectId.
+add_material: name,category,manufacturer,sku,widthMm,depthMm,heightMm,unit,quantity,unitPrice,wastePercent,color,swatch,note.
+add_cost: name,category,quantity,unit,unitPrice,note. set_contingency: percent. append_notes: text. set_wall_height: heightM.
+set_surface_material: surface wall|floor|ceiling, materialId. create_variant: name,notes.
+Pravidla: nejvýše 12 akcí; používej pouze existující objectId/materialId a libraryKey z kontextu; nevymýšlej cenu jako jistou skutečnost; odstranění nebo zásah do rozvodů označ high; přesné rozměry bez podkladu nenavrhuj.
+Kontext aktivní varianty:
+$($Payload.project | ConvertTo-Json -Depth 16 -Compress)
+Poslední zprávy:
+$($Payload.messages | ConvertTo-Json -Depth 8 -Compress)
+"@
+    } elseif ($task -eq 'variants') {
         $prompt = @"
 Jsi stavební a interiérový návrhový asistent v osobní aplikaci DOMUS Studio. Připrav přesně 3 realistické návrhové směry pro zadaný projekt: účelný/úsporný, vyvážený a prémiový. Neuváděj konkrétní stavební tvrzení, která nelze doložit. Vrať pouze platný JSON bez markdownu ve tvaru:
 {"variants":[{"name":"...","style":"...","description":"...","budgetFactor":0.85,"contingencyPercent":12,"changes":["...","...","...","..."]}]}
@@ -318,6 +342,40 @@ $($Payload.photoViews | ConvertTo-Json -Depth 8 -Compress)
     return @{ text = $text; id = [string]$response.id }
 }
 
+function Invoke-DomusImageEdit {
+    param($Payload, $Configuration)
+    $prompt = [string]$Payload.prompt
+    if ([string]::IsNullOrWhiteSpace($prompt) -or $prompt.Length -lt 10 -or $prompt.Length -gt 12000) { throw 'Zadání vizualizace nemá platnou délku.' }
+    $imageDataUrl = [string]$Payload.imageDataUrl
+    if ($imageDataUrl -notmatch '^data:image/(jpeg|png|webp);base64,') { throw 'Zdrojová fotografie nemá podporovaný formát.' }
+    $quality = [string]$Payload.quality
+    if (@('medium','high') -notcontains $quality) { $quality = 'medium' }
+    $size = [string]$Payload.size
+    if (@('auto','1024x1024','1536x1024','1024x1536') -notcontains $size) { $size = 'auto' }
+    $count = 1
+    try { $count = [Math]::Max(1, [Math]::Min(3, [int]$Payload.count)) } catch { $count = 1 }
+    $body = @{
+        model = $Configuration.imageModel
+        images = @(@{ image_url = $imageDataUrl })
+        prompt = $prompt
+        input_fidelity = 'high'
+        quality = $quality
+        size = $size
+        n = $count
+        output_format = 'webp'
+        output_compression = 88
+        moderation = 'auto'
+    }
+    $headers = @{ Authorization = "Bearer $($Configuration.apiKey)"; 'Content-Type' = 'application/json' }
+    $response = Invoke-RestMethod -Uri 'https://api.openai.com/v1/images/edits' -Method Post -Headers $headers -Body ($body | ConvertTo-Json -Depth 12 -Compress) -TimeoutSec 300
+    $dataUrls = New-Object System.Collections.ArrayList
+    foreach ($item in @($response.data)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$item.b64_json)) { [void]$dataUrls.Add("data:image/webp;base64,$([string]$item.b64_json)") }
+    }
+    if ($dataUrls.Count -eq 0) { throw 'Obrazová AI nevrátila žádný obrázek.' }
+    return @{ dataUrls = @($dataUrls); model = $Configuration.imageModel }
+}
+
 function Test-ProjectPayload {
     param($Project)
     if (-not $Project -or [string]::IsNullOrWhiteSpace([string]$Project.id)) { throw 'Projekt nemá platnou strukturu.' }
@@ -351,7 +409,7 @@ try {
 }
 Start-Process "$localPrefix`index.html"
 if ($lanEnabled) {
-    Write-Host "DOMUS Studio v7.0 Premium bezi na notebooku: $localPrefix" -ForegroundColor Green
+    Write-Host "DOMUS Studio v7.3 Premium bezi na notebooku: $localPrefix" -ForegroundColor Green
     Write-Host "Adresa pro telefon: $mobileUrl" -ForegroundColor Cyan
     Write-Host "Jednorazovy parovaci kod (10 minut): $pairingCode" -ForegroundColor Cyan
     Write-Host 'Telefon i notebook musi byt ve stejne duveryhodne siti Wi-Fi.' -ForegroundColor DarkGray
@@ -359,13 +417,12 @@ if ($lanEnabled) {
 
 $mime = @{
     '.html' = 'text/html; charset=utf-8'; '.css' = 'text/css; charset=utf-8'; '.js' = 'application/javascript; charset=utf-8';
-    '.webmanifest' = 'application/manifest+json; charset=utf-8'; '.svg' = 'image/svg+xml'; '.png' = 'image/png'; '.jpg' = 'image/jpeg'; '.jpeg' = 'image/jpeg'
+    '.webmanifest' = 'application/manifest+json; charset=utf-8'; '.map' = 'application/json; charset=utf-8'; '.svg' = 'image/svg+xml'; '.png' = 'image/png'; '.jpg' = 'image/jpeg'; '.jpeg' = 'image/jpeg'
 }
 $allowedStatic = @{}
 $staticFiles = @(
-    'index.html', 'styles.css', 'app.js', 'db.js', 'domus-core.js', 'domus-audit.js',
-    'domus-backup.js', 'domus-premium.js', 'domus-performance.js', 'domus-diagnostics.js', 'service-worker.js', 'manifest.webmanifest',
-    'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
+    'index.html', 'theme-init.js', 'styles.css', 'styles.css.map', 'app.js', 'app.js.map', 'service-worker.js', 'manifest.webmanifest',
+    'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'MANUAL-DOMUS-STUDIO-v7.3.html',
     'workers/project-metrics-worker.js', 'vendor/three.core.min.js', 'vendor/three.module.min.js', 'vendor/OrbitControls.js', 'vendor/GLTFExporter.js',
     'vendor/tauri-core.js', 'vendor/tauri-updater.js', 'vendor/tauri-process.js', 'vendor/external/tslib/tslib.es6.js'
 )
@@ -388,7 +445,7 @@ try {
             if ($path -eq '/api/status') {
                 if (-not (Require-LocalApi $context)) { continue }
                 $config = Get-AIConfiguration
-                Write-JsonResponse -Context $context -Data @{ configured = $config.configured; model = $config.model; message = $(if ($config.configured) { 'Zašifrovaný API klíč je uložen mimo webovou složku a dostupný pouze aktuálnímu uživateli Windows.' } else { 'Spusťte Nastavit-AI-pripojeni.bat.' }) }
+                Write-JsonResponse -Context $context -Data @{ configured = $config.configured; model = $config.model; imageModel = $config.imageModel; message = $(if ($config.configured) { 'Zašifrovaný API klíč je uložen mimo webovou složku a dostupný pouze aktuálnímu uživateli Windows.' } else { 'Spusťte Nastavit-AI-pripojeni.bat.' }) }
                 continue
             }
             if ($path -eq '/api/product' -and $context.Request.HttpMethod -eq 'POST') {
@@ -406,6 +463,16 @@ try {
                 $config = Get-AIConfiguration
                 if (-not $config.configured) { Write-JsonResponse -Context $context -Data @{ ok = $false; error = 'AI připojení není nastaveno.' } -StatusCode 503; continue }
                 try { $result = Invoke-DomusAI -Payload $payload -Configuration $config; Write-JsonResponse -Context $context -Data @{ ok = $true; text = $result.text; model = $config.model; requestId = $result.id } }
+                catch { Write-JsonResponse -Context $context -Data @{ ok = $false; error = $_.Exception.Message } -StatusCode 502 }
+                continue
+            }
+            if ($path -eq '/api/image' -and $context.Request.HttpMethod -eq 'POST') {
+                if (-not (Require-LocalApi $context)) { continue }
+                if (-not (Test-RateLimit -Request $context.Request -Bucket 'image' -Limit 12 -Minutes 60)) { Write-JsonResponse -Context $context -Data @{ ok=$false; error='Byl dosažen hodinový bezpečnostní limit obrazových požadavků.' } -StatusCode 429; continue }
+                $payload = Read-JsonBody -Request $context.Request -Limit $maxBodyBytes[$path]
+                $config = Get-AIConfiguration
+                if (-not $config.configured) { Write-JsonResponse -Context $context -Data @{ ok = $false; error = 'AI připojení není nastaveno.' } -StatusCode 503; continue }
+                try { $result = Invoke-DomusImageEdit -Payload $payload -Configuration $config; Write-JsonResponse -Context $context -Data @{ ok = $true; dataUrls = $result.dataUrls; model = $result.model } }
                 catch { Write-JsonResponse -Context $context -Data @{ ok = $false; error = $_.Exception.Message } -StatusCode 502 }
                 continue
             }

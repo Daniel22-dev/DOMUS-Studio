@@ -1,7 +1,7 @@
 /* DOMUS Studio Premium Core v7: DXF, conflict-aware merge, performance budgets and release metadata. */
 (() => {
   'use strict';
-  const RELEASE = Object.freeze({ version: '7.0.0', schemaVersion: 7, channel: 'premium', architecture: 'modular-local-first' });
+  const RELEASE = Object.freeze({ version: '7.3.0', schemaVersion: 7, channel: 'premium', architecture: 'esbuild-bundled-local-first' });
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
   const isoTime = (value) => { const time = Date.parse(value || ''); return Number.isFinite(time) ? time : 0; };

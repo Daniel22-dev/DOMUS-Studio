@@ -1,7 +1,8 @@
 {
-  "version": "7.0.0",
+  "version": "7.3.0",
   "schemaVersion": 7,
-  "generatedAt": "2026-07-20T06:04:34.645Z",
+  "sourceHash": "5903a30f54aa4e6998be2644a9e12bf1f9d3fe28257cd637664e712c85c29ce0",
+  "bundler": "esbuild",
   "appFragments": [
     "00-shell.js",
     "10-ui-foundation.js",
@@ -14,8 +15,16 @@
     "60-render-delivery.js",
     "65-premium-report.js",
     "70-events-actions.js",
+    "71-event-delegation.js",
+    "72-rendered-bindings.js",
+    "73-action-router.js",
+    "74-dialogs-active-view.js",
     "75-premium-actions.js",
     "80-ai-field-sync.js",
+    "81-field-capture.js",
+    "82-sync-client.js",
+    "83-ai-visualizer-assistant.js",
+    "84-manual.js",
     "85-premium-sync.js",
     "90-photo-plan-canvas.js",
     "95-premium-plan-canvas.js",
@@ -25,13 +34,166 @@
     "115-desktop-updater.js",
     "120-canvas-utils-init.js"
   ],
+  "appFragmentRanges": [
+    {
+      "file": "src/app/00-shell.js",
+      "startLine": 3,
+      "endLine": 195
+    },
+    {
+      "file": "src/app/10-ui-foundation.js",
+      "startLine": 199,
+      "endLine": 344
+    },
+    {
+      "file": "src/app/15-premium-foundation.js",
+      "startLine": 348,
+      "endLine": 376
+    },
+    {
+      "file": "src/app/20-project-model.js",
+      "startLine": 380,
+      "endLine": 663
+    },
+    {
+      "file": "src/app/30-render-shell.js",
+      "startLine": 667,
+      "endLine": 962
+    },
+    {
+      "file": "src/app/40-render-capture.js",
+      "startLine": 966,
+      "endLine": 1109
+    },
+    {
+      "file": "src/app/50-render-design.js",
+      "startLine": 1113,
+      "endLine": 1244
+    },
+    {
+      "file": "src/app/55-premium-design.js",
+      "startLine": 1248,
+      "endLine": 1249
+    },
+    {
+      "file": "src/app/60-render-delivery.js",
+      "startLine": 1253,
+      "endLine": 1403
+    },
+    {
+      "file": "src/app/65-premium-report.js",
+      "startLine": 1407,
+      "endLine": 1425
+    },
+    {
+      "file": "src/app/70-events-actions.js",
+      "startLine": 1429,
+      "endLine": 1589
+    },
+    {
+      "file": "src/app/71-event-delegation.js",
+      "startLine": 1593,
+      "endLine": 1695
+    },
+    {
+      "file": "src/app/72-rendered-bindings.js",
+      "startLine": 1699,
+      "endLine": 1793
+    },
+    {
+      "file": "src/app/73-action-router.js",
+      "startLine": 1797,
+      "endLine": 1929
+    },
+    {
+      "file": "src/app/74-dialogs-active-view.js",
+      "startLine": 1933,
+      "endLine": 1999
+    },
+    {
+      "file": "src/app/75-premium-actions.js",
+      "startLine": 2003,
+      "endLine": 2013
+    },
+    {
+      "file": "src/app/80-ai-field-sync.js",
+      "startLine": 2017,
+      "endLine": 2224
+    },
+    {
+      "file": "src/app/81-field-capture.js",
+      "startLine": 2228,
+      "endLine": 2291
+    },
+    {
+      "file": "src/app/82-sync-client.js",
+      "startLine": 2295,
+      "endLine": 2390
+    },
+    {
+      "file": "src/app/83-ai-visualizer-assistant.js",
+      "startLine": 2394,
+      "endLine": 2615
+    },
+    {
+      "file": "src/app/84-manual.js",
+      "startLine": 2619,
+      "endLine": 2651
+    },
+    {
+      "file": "src/app/85-premium-sync.js",
+      "startLine": 2655,
+      "endLine": 2690
+    },
+    {
+      "file": "src/app/90-photo-plan-canvas.js",
+      "startLine": 2694,
+      "endLine": 2984
+    },
+    {
+      "file": "src/app/95-premium-plan-canvas.js",
+      "startLine": 2988,
+      "endLine": 3004
+    },
+    {
+      "file": "src/app/100-section-model-xr.js",
+      "startLine": 3008,
+      "endLine": 3221
+    },
+    {
+      "file": "src/app/105-premium-3d.js",
+      "startLine": 3225,
+      "endLine": 3241
+    },
+    {
+      "file": "src/app/110-backup-export.js",
+      "startLine": 3245,
+      "endLine": 3374
+    },
+    {
+      "file": "src/app/115-desktop-updater.js",
+      "startLine": 3378,
+      "endLine": 3381
+    },
+    {
+      "file": "src/app/120-canvas-utils-init.js",
+      "startLine": 3385,
+      "endLine": 3398
+    }
+  ],
   "coreModules": [
+    "domus-core.js",
     "db.js",
     "domus-audit.js",
     "domus-backup.js",
-    "domus-core.js",
-    "domus-diagnostics.js",
+    "domus-premium.js",
     "domus-performance.js",
-    "domus-premium.js"
+    "domus-diagnostics.js"
+  ],
+  "outputs": [
+    "app.js",
+    "app.js.map",
+    "styles.css",
+    "styles.css.map"
   ]
 }

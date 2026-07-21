@@ -1,6 +1,6 @@
 [package]
 name = "domus-studio"
-version = "7.0.0"
+version = "7.3.0"
 description = "DOMUS Studio Premium"
 authors = ["DOMUS Studio"]
 edition = "2021"

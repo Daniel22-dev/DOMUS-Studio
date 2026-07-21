@@ -1,27 +1,33 @@
-DOMUS Studio Premium v7.0.0 – testovací vrstvy
+DOMUS Studio Premium v7.2.0 – testovací vrstvy
 ================================================
 
 AUTOMATICKY OVĚŘENO V TOMTO PROSTŘEDÍ
 
-1. Build
-- 21 aplikačních modulů sestaveno do app.js
-- 7 základních jader zkopírováno do runtime
-- distribuční složka dist vytvořena
+1. Build a architektura
+- esbuild sestavil 27 aplikačních fragmentů a 7 jader do jediného runtime balíku
+- samostatně ověřen vývojový a produkční režim
+- JavaScript i CSS mají source mapy
+- produkční JavaScript: 308 679 B, vývojový JavaScript: 482 360 B
+- architektonický audit: 233 pojmenovaných funkcí bez kolize
+- build manifest: deterministický SHA-256 otisk + mapa fragmentů
 - výsledek: OK
 
 2. Unit a doménové testy
 - validace, migrace, bezpečnost, Verify a ZIP zálohy
 - DXF export, položkové slučování, kalendář záruk a výkon
+- Three.js r185
+- kontrola produkční minifikace a build výstupů
 - výsledek: OK
 
 3. Statické testy
 - 105 uživatelských akcí má handler
-- 73 statických HTML ID bez kolize
-- PWA, vendor soubory, Tauri struktura a moduly
+- 93 statických HTML ID bez kolize
+- PWA, vendor soubory, Tauri struktura a runtime whitelist
+- delegované události a cílené výsledkové oblasti
 - výsledek: OK
 
 4. PowerShell bezpečnost
-- whitelist runtime souborů
+- whitelist runtime souborů včetně source map
 - API autorizace a omezení
 - výsledek: OK
 
@@ -29,14 +35,15 @@ AUTOMATICKY OVĚŘENO V TOMTO PROSTŘEDÍ
 - 16 pracovních částí
 - Test Lab bez FAIL
 - Precision 2D, filtry, vymazání a Undo
-- mobilní viewport 390 px bez přetékání
-- mobilní export dostupný
+- cílený filtr zachovává kořen aplikace a vstupní pole
+- delegovaná akce funguje i po výměně výsledkové oblasti
+- tablet 1024 px a telefon 390 px bez horizontálního přetékání
 - výsledek: OK
 
 6. Další kontroly
-- npm audit: 0 známých zranitelností
+- npm audit --omit=dev: 0 známých zranitelností
 - generated-check: OK
-- YAML workflow: OK
+- výsledek npm run test:all: OK
 
 PŘESKOČENO LOKÁLNÍM PROSTŘEDÍM
 
@@ -47,7 +54,7 @@ Oba testy zůstávají aktivní v GitHub CI, kde běží v běžném runneru.
 
 NEOVĚŘENO LOKÁLNĚ
 
-- fyzické sestavení Tauri instalátorů, protože prostředí nemá Rust/Cargo ani platformní SDK,
+- cargo check a fyzické sestavení Tauri instalátorů, protože prostředí nemá Rust/Cargo ani platformní SDK,
 - Authenticode podpis Windows, protože nebyl poskytnut kódový certifikát,
 - podpis updater artefaktů, protože soukromý klíč patří do GitHub Secrets,
 - reálný LiDAR, RoomPlan a XR hardware.

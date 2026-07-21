@@ -1,8 +1,7 @@
-const CACHE = 'domus-studio-v7-0-0-r3';
+const CACHE = 'domus-studio-v7-3-0-r1';
 const CORE = [
-  './', './index.html', './styles.css', './domus-core.js', './db.js', './domus-audit.js',
-  './domus-backup.js', './domus-premium.js', './domus-performance.js', './domus-diagnostics.js', './app.js', './manifest.webmanifest', './icon.svg', './icon-192.png',
-  './icon-512.png', './icon-maskable-512.png', './workers/project-metrics-worker.js', './vendor/three.core.min.js', './vendor/three.module.min.js', './vendor/OrbitControls.js', './vendor/GLTFExporter.js', './vendor/tauri-core.js', './vendor/tauri-updater.js', './vendor/tauri-process.js', './vendor/external/tslib/tslib.es6.js'
+  './', './index.html', './theme-init.js', './styles.css', './app.js', './manifest.webmanifest', './icon.svg', './icon-192.png',
+  './icon-512.png', './icon-maskable-512.png', './MANUAL-DOMUS-STUDIO-v7.3.html', './workers/project-metrics-worker.js', './vendor/three.core.min.js', './vendor/three.module.min.js', './vendor/OrbitControls.js', './vendor/GLTFExporter.js', './vendor/tauri-core.js', './vendor/tauri-updater.js', './vendor/tauri-process.js', './vendor/external/tslib/tslib.es6.js'
 ];
 const MAX_RUNTIME_ITEMS = 40;
 
@@ -48,7 +47,8 @@ async function staleWhileRevalidate(request) {
     }
     return response;
   }).catch(() => null);
-  return cached || update || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+  if (cached) return cached;
+  return (await update) || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }
 
 self.addEventListener('fetch', (event) => {

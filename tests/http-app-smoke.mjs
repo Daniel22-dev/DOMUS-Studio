@@ -69,7 +69,7 @@ for (let attempt = 0; attempt < 120; attempt += 1) {
   if (loaded.ready && /DOMUS Studio/.test(loaded.title) && loaded.testLab && (loaded.projects >= 1 || loaded.storageError)) break;
   await sleep(150);
 }
-assert.match(loaded?.title || '', /7\.0/);
+assert.match(loaded?.title || '', /7\.2/);
 assert.equal(loaded?.testLab, true, 'Test Lab musí být dostupný jako runtime modul.');
 if (!loaded || loaded.projects < 1) {
   const runtime = errors.length ? `\nRuntime chyby:\n${errors.join('\n')}` : '';

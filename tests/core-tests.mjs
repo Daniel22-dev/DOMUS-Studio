@@ -29,6 +29,23 @@ assert.equal(safe.variants[0].photo.dataUrl, null);
 assert.equal(safe.variants[0].materials[0].url, '');
 assert.equal({}.polluted, undefined);
 
+
+const noteOnlyDocuments = DomusCore.secureProject({
+  id: 'project-note-docs', name: 'Poznámkové dokumenty', schemaVersion: 7,
+  activeVariantId: 'v-note', variants: [{
+    id: 'v-note', name: 'Varianta',
+    plan: { scale: 100, walls: [], objects: [] },
+    field: { sessions: [] },
+    diary: {
+      entries: [{ id: 'entry-1', documents: [{ id: 'doc-1', dataUrl: null, note: 'Doklad bude doplněn později.' }], photos: [] }],
+      warranties: [{ id: 'warranty-1', documents: [{ id: 'doc-2', dataUrl: null, note: 'Papírový záruční list.' }] }],
+      passport: [],
+    },
+  }],
+});
+assert.equal(noteOnlyDocuments.variants[0].diary.entries[0].documents.length, 1, 'Poznámka bez souboru se při importu deníku nesmí ztratit');
+assert.equal(noteOnlyDocuments.variants[0].diary.warranties[0].documents.length, 1, 'Poznámka bez souboru se při importu záruky nesmí ztratit');
+
 const plan = {
   scale: 100,
   walls: [
@@ -63,6 +80,13 @@ assert.ok(accepted.acceptedScore >= accepted.technicalScore, 'Skóre po přijet�
 const analysis = DomusCore.validateAiAnalysis({ summary: '<b>text</b>', confidence: 9, proposedPlan: { widthMm: 999999, depthMm: -1 }, elements: [], risks: [], recommendations: [] });
 assert.equal(analysis.confidence, 1);
 assert.ok(analysis.proposedPlan.widthMm <= 50000 && analysis.proposedPlan.depthMm >= 500);
+
+const assistant = DomusCore.validateAiAssistantResponse({ reply: 'Připravil jsem návrh.', proposal: { title: 'Doplnění žlabu', summary: 'Přidá jeden prvek.', risk: 'medium', assumptions: ['Poloha musí být změřena.'], actions: [{ type: 'add_object', label: 'Přidat podlahovou vpusť', params: { libraryKey: 'floor-drain', xMm: 1200, yMm: 800, widthMm: 150, depthMm: 150 } }] } });
+assert.equal(assistant.proposal.actions[0].type, 'add_object');
+assert.throws(() => DomusCore.validateAiAssistantResponse({ reply: '', proposal: { actions: [{ type: 'execute_code', params: {} }] } }), /nepovolenou akci/, 'AI asistent nesmí přijmout libovolnou akci');
+const securedVisuals = DomusCore.secureProject({ id: 'project-ai-images', name: 'AI', activeVariantId: 'v', variants: [{ id: 'v', name: 'V', plan: { scale: 100, walls: [], objects: [] }, ai: { visualizer: { generations: [{ id: 'g', name: 'N', dataUrl: 'data:image/webp;base64,UklGRg==' }] }, assistant: { messages: [{ id: 'm', role: 'user', text: '<b>Ahoj</b>' }] } }, field: { sessions: [] }, diary: { entries: [], warranties: [], passport: [] } }] });
+assert.equal(securedVisuals.variants[0].ai.visualizer.generations.length, 1);
+assert.equal(securedVisuals.variants[0].ai.assistant.messages[0].role, 'user');
 
 const zip = DomusBackup.createZip([{ name: 'a.txt', bytes: new TextEncoder().encode('ok') }]);
 assert.ok(zip instanceof Blob && zip.size > 20, 'ZIP builder musí vytvořit data');
