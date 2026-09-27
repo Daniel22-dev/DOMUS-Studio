@@ -30,7 +30,7 @@
     "three": "^0.185.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.8.0",
+    "@tauri-apps/cli": "^2.11.5",
     "esbuild": "^0.28.1"
   },
   "engines": {
